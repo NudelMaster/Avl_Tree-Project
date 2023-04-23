@@ -185,8 +185,16 @@ class AVLTree(object):
 	@returns: the value corresponding to key.
 	"""
 	def search(self, key):
+		node = self.get_root()
+		if node.is_real_node():
+			def search_rec(node, key):
+				if node.get_key() == key:
+					return node
+				if node.left.is_real_node() and key > node.left.key():
+					return search_rec(node.left, key)
+				if node.right.is_real_node() and key < node.right.key():
+					return search_rec(node.right, key)
 		return None
-
 
 	"""inserts val at position i in the dictionary
 
@@ -271,7 +279,11 @@ class AVLTree(object):
 	@returns: the rank of node in self
 	"""
 	def rank(self, node):
-		return None
+		root = self.get_root()
+		def rank_rec(root, node):
+			if node == root:
+				return 0
+			return 1 + rank_rec(root, node.get_parent())
 
 
 	"""finds the i'th smallest item (according to keys) in self
@@ -283,7 +295,14 @@ class AVLTree(object):
 	@returns: the item of rank i in self
 	"""
 	def select(self, i):
-		return None
+		root = self.root()
+		def select_rec(node, i):
+			if i == 0:
+				return node
+			if node.get_left().is_real_node():
+				select_rec(node.left, i-1)
+			if node.get_right().is_real_node():
+				select_rec(node.right, i-1)
 
 
 	"""returns the root of the tree representing the dictionary
@@ -292,4 +311,4 @@ class AVLTree(object):
 	@returns: the root, None if the dictionary is empty
 	"""
 	def get_root(self):
-		return None
+		return self.root
