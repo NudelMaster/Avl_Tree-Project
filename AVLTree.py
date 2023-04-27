@@ -160,12 +160,22 @@ class AVLNode(object):
     def is_real_node(self):
         return self.key is not None
 
-	"""get balance factor of the node"""
-	def get_Balance(self):
-		if not self.is_real_node():
-			return 0
-		return self.get_left().get_height() - self.get_right().get_height()
-
+    def left_rotate(self):
+        y = self.get_right()
+        temp = y.get_left()
+        y.set_left(self)
+        self.set_right(temp)
+        self.set_height(1 + max(self.get_left().get_height(), self.get_right().get_height()))
+        y.set_height(1 + max(y.get_left().get_height(), y.get_right().get_height()))
+        return y
+    def right_rotate(self):
+        y = self.get_left()
+        temp = y.get_right()
+        y.set_right(self)
+        self.set_left(temp)
+        self.set_height(1 + max(self.get_left().get_height(), self.get_right().get_height()))
+        y.set_height(1 + max(y.get_left().get_height(), y.get_right().get_height()))
+        return y
 """
 A class implementing an AVL tree.
 """
@@ -214,8 +224,32 @@ class AVLTree(object):
     """
 
     def insert(self, key, val):
-        if not self.root:
+        root = self.get_root()
+        if root is None:
             self.root = AVLNode(key, val)
+            return 0
+
+        def insert_rec(node, key, val):
+            if not node:
+                return AVLNode(key, val)
+            if key < node.get_key():
+                node.left = insert_rec(node.left, key, val)
+            else:
+                node.right = insert_rec(node.right, key, val)
+            return node
+
+        y = insert_rec(root, key, val).get_parent()
+        temp_height = y.get_height()
+        while(y):
+            balance_factor = y.get_left().get_height() - y.get_right().get_height()
+            if -2 < balance_factor < 2 and y.get_height() == temp_height:
+                break
+            elif -2 < balance_factor < 2 and y.get_height() != temp_height:
+                y = y.get_parent()
+            elif balance_factor == 2 or balance_factor == -2:
+
+
+
 
 
     """deletes node from the dictionary
