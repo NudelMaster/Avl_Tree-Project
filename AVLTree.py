@@ -338,8 +338,8 @@ class AVLTree(object):
     def rank(self, node):
         r = node.left.size + 1
         y = node
-        while(is_real_node(y))
-            if (y.key == y.parent.right.key)
+        while y.is_real_node():
+            if y.get_key() == y.get_parent().get_right().get_key():
                 r += y.parent.left.size + 1
             y = y.parent
         return r
@@ -354,13 +354,13 @@ class AVLTree(object):
     """
 
     def select(self, i):
-        r = root.get_size + 1
-        if r == i
-            return root
-        elif i < r
-            return select(root.left,i)
-        else
-            return select(root.right, i - r)
+        r = self.root.get_size + 1
+        if r == i:
+            return self.root
+        elif i < r:
+            return self.select(self.root.left,i)
+        else:
+            return self.select(self.root.right, i - r)
 
     """returns the root of the tree representing the dictionary
 
