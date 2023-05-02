@@ -162,32 +162,6 @@ class AVLNode(object):
     def is_real_node(self):
         return self.height > -1
 
-    def left_rotate(self):
-        B = self
-        A = B.get_right()
-        B.set_right(A.get_left())
-        B.get_right().set_parent(B)
-        A.set_left(B)
-        self.fix_parent(self, A)
-        return A
-
-    def right_rotate(self):
-        B = self
-        A = B.get_left()
-        B.set_left(A.get_right())
-        B.get_left().set_parent(B)
-        A.set_right(B)
-        self.fix_parent(self, A)
-        return A
-
-    def fix_parent(self, A):
-        B = self
-        A.set_parent(B.get_parent())
-        if B.get_parent().get_left().get_value() == B.get_value():
-            A.get_parent().set_left(A)
-        else:
-            A.get_parent().set_right(A)
-        B.set_parent(A)
 
 
 """
@@ -228,7 +202,8 @@ class AVLTree(object):
         return None
 
     def updateHeight(self, node):
-        node.set_height(1+max(node.left.height, node.right.height))
+        if node.is_real_node():
+            node.set_height(1+max(node.left.height, node.right.height))
     def updateSize(self, node):
         node.set_size(1 + node.left.size, node.right.size)
 
@@ -247,11 +222,13 @@ class AVLTree(object):
         root = self.get_root()
         if root is None:
             self.root = AVLNode(key, val)
+            self.root.set_left(self.virtualNode)
+            self.root.set_right(self.virtualNode)
             return 0
         rb_num = 0
 
         def insert_rec(node, key, val, parent):
-            if not node:
+            if not node.is_real_node():
                 node.set_parent(parent)
                 return AVLNode(key, val)
             if key < node.get_key():
@@ -259,21 +236,72 @@ class AVLTree(object):
             else:
                 node.right = insert_rec(node.right, key, val, node)
             return node
-        y = insert_rec(root, key, val, None).get_parent()
-        temp_height = y.get_height()
-        self.updateHeight(y)
+        y = insert_rec(root, key, val, self.virtualNode).get_parent()
         while y:
+            temp_height = y.get_height()
+            self.updateHeight(y)
             balance_factor = y.get_left().get_height() - y.get_right().get_height()
-            if -2 < balance_factor < 2 and y.get_height() == temp_height:
+            if abs(balance_factor) < 2 and y.get_height() == temp_height:
                 break
-            elif -2 < balance_factor < 2 and y.get_height() != temp_height:
+            elif abs(balance_factor) < 2 and y.get_height() != temp_height:
                 y = y.get_parent()
-            elif balance_factor > 1:
-                y = y.right_rotate()
-                rb_num += 1
-            elif balance_factor < -1:
-                y = y.left_rotate()
-                rb_num += 1
+            y = self.rotate(y)
+
+
+
+    def left_rotate(self, node):
+        B = node
+        A = B.get_right()
+        B.set_right(A.get_left())
+        B.get_right().set_parent(B)
+        A.set_left(B)
+        node.fix_parent(node, A, B)
+        self.updateHeight(B)
+        self.updateHeight(A)
+        return A
+
+    def right_rotate(self, node):
+        B = node
+        A = B.get_left()
+        B.set_left(A.get_right())
+        B.get_left().set_parent(B)
+        A.set_right(B)
+        node.fix_parent(node, A, B)
+        self.updateHeight(B)
+        self.updateHeight(A)
+        return A
+
+    def fix_parent(self, A, B):
+        A.set_parent(B.get_parent())
+        if B.get_parent().get_left().get_value() == B.get_value():
+            A.get_parent().set_left(A)
+        else:
+            A.get_parent().set_right(A)
+        B.set_parent(A)
+
+    def BFS(self, node):
+        return node.get_left().height - node.get_right().height
+    def rotate(self, node):
+        balance_factor = self.BFS(node)
+        if balance_factor == 2:
+            if self.BFS(node.get_left()) == -1:
+                node = self.left_then_right(node.get_left())
+            else:
+                node = self.right_rotate()
+            if self.BFS()
+
+
+
+
+
+
+
+    def left_then_right(self,node):
+        node = self.left_rotate(node)
+        node = self.right_rotate(node.get_parent())
+        return node
+
+
 
     """deletes node from the dictionary
 
