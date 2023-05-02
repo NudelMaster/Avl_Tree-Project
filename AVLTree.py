@@ -77,7 +77,9 @@ class AVLNode(object):
     """
 
     def get_height(self):
-        return self.height if self.is_real_node() else -1
+        return self.height
+
+
 
     """returns the size of the subtree
 
@@ -86,7 +88,7 @@ class AVLNode(object):
     """
 
     def get_size(self):
-        return self.size if self.is_real_node() else 0
+        return self.size
 
     """sets key
 
@@ -158,7 +160,7 @@ class AVLNode(object):
     """
 
     def is_real_node(self):
-        return self.key is not None
+        return self.height > -1
 
     def left_rotate(self):
         B = self
@@ -200,8 +202,9 @@ class AVLTree(object):
     """
 
     def __init__(self):
+        virtualNode = AVLNode(None)
         self.root = None
-
+        self.virtualNode = virtualNode
     # add your fields here
 
     """searches for a value in the dictionary corresponding to the key
@@ -223,6 +226,11 @@ class AVLTree(object):
                 if node.right.is_real_node() and key < node.right.key():
                     return search_rec(node.right, key)
         return None
+
+    def updateHeight(self, node):
+        node.set_height(1+max(node.left.height, node.right.height))
+    def updateSize(self, node):
+        node.set_size(1 + node.left.size, node.right.size)
 
     """inserts val at position i in the dictionary
 
@@ -253,6 +261,7 @@ class AVLTree(object):
             return node
         y = insert_rec(root, key, val, None).get_parent()
         temp_height = y.get_height()
+        self.updateHeight(y)
         while y:
             balance_factor = y.get_left().get_height() - y.get_right().get_height()
             if -2 < balance_factor < 2 and y.get_height() == temp_height:
@@ -261,10 +270,10 @@ class AVLTree(object):
                 y = y.get_parent()
             elif balance_factor > 1:
                 y = y.right_rotate()
-                rb_num += 2
+                rb_num += 1
             elif balance_factor < -1:
                 y = y.left_rotate()
-                rb_num += 2
+                rb_num += 1
 
     """deletes node from the dictionary
 
