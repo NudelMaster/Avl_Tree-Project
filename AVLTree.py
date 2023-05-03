@@ -6,6 +6,7 @@
 
 
 """A class represnting a node in an AVL tree"""
+import sys
 
 
 class AVLNode(object):
@@ -50,7 +51,7 @@ class AVLNode(object):
     """
 
     def get_left(self):
-        return self.left if self.is_real_node() else None
+        return self.left
 
     """returns the right child
 
@@ -59,7 +60,7 @@ class AVLNode(object):
     """
 
     def get_right(self):
-        return self.right if self.is_real_node() else None
+        return self.right
 
     """returns the parent 
 
@@ -78,8 +79,6 @@ class AVLNode(object):
 
     def get_height(self):
         return self.height
-
-
 
     """returns the size of the subtree
 
@@ -163,7 +162,6 @@ class AVLNode(object):
         return self.height > -1
 
 
-
 """
 A class implementing an AVL tree.
 """
@@ -176,9 +174,10 @@ class AVLTree(object):
     """
 
     def __init__(self):
-        virtualNode = AVLNode(None)
+        virtualNode = AVLNode(None, -1)
         self.root = None
         self.virtualNode = virtualNode
+
     # add your fields here
 
     """searches for a value in the dictionary corresponding to the key
@@ -202,8 +201,15 @@ class AVLTree(object):
         return None
 
     def updateHeight(self, node):
-        if node.is_real_node():
-            node.set_height(1+max(node.left.height, node.right.height))
+        left_height = max(node.get_left().get_height(), 0)
+        right_height = max(node.get_right().get_height(),0)
+        if self.is_leaf(node):
+            node.set_height(0)
+        else:
+            node.set_height(1 + max(left_height, right_height))
+
+    def is_leaf(self, node):
+        return node.get_left() == self.virtualNode and node.get_right() == self.virtualNode
     def updateSize(self, node):
         node.set_size(1 + node.left.size, node.right.size)
 
@@ -224,30 +230,40 @@ class AVLTree(object):
             self.root = AVLNode(key, val)
             self.root.set_left(self.virtualNode)
             self.root.set_right(self.virtualNode)
+            self.updateHeight(self.root)
             return 0
         rb_num = 0
 
-        def insert_rec(node, key, val, parent):
-            if not node.is_real_node():
-                node.set_parent(parent)
-                return AVLNode(key, val)
+        def insert_rec(node, key, val, parent):  # regular insert to binary tree
             if key < node.get_key():
-                node.left = insert_rec(node.left, key, val, node)
-            else:
-                node.right = insert_rec(node.right, key, val, node)
-            return node
-        y = insert_rec(root, key, val, self.virtualNode).get_parent()
-        while y:
+                if not node.get_left().is_real_node():
+                    node.set_left(AVLNode(key, val))
+                    node.get_left().set_parent(node)
+                    return node.get_left()
+                return insert_rec(node.get_left(), key, val, node)
+            elif key > node.get_key():
+                if not node.get_right().is_real_node():
+                    node.set_right(AVLNode(key, val))
+                    node.get_right().set_parent(node)
+                    return node.get_right()
+                return insert_rec(node.get_right(), key, val, node)
+        y = insert_rec(root, key, val, self.virtualNode)  # get inserted node
+        y.set_left(self.virtualNode)
+        y.set_right(self.virtualNode)
+        self.updateHeight(y)
+        y = y.get_parent()
+        while y:  # check if we the node is not null (happens after we get the parent of the root)
             temp_height = y.get_height()
             self.updateHeight(y)
-            balance_factor = y.get_left().get_height() - y.get_right().get_height()
+            balance_factor = self.BFS(y)
             if abs(balance_factor) < 2 and y.get_height() == temp_height:
                 break
             elif abs(balance_factor) < 2 and y.get_height() != temp_height:
                 y = y.get_parent()
-            y = self.rotate(y)
-
-
+            elif abs(balance_factor) == 2:
+                y, rb_num = self.rotate(y)
+                y = y.get_parent()
+        return rb_num
 
     def left_rotate(self, node):
         B = node
@@ -255,7 +271,7 @@ class AVLTree(object):
         B.set_right(A.get_left())
         B.get_right().set_parent(B)
         A.set_left(B)
-        node.fix_parent(node, A, B)
+        self.fix_parent(A, B)
         self.updateHeight(B)
         self.updateHeight(A)
         return A
@@ -266,14 +282,16 @@ class AVLTree(object):
         B.set_left(A.get_right())
         B.get_left().set_parent(B)
         A.set_right(B)
-        node.fix_parent(node, A, B)
+        self.fix_parent(A, B)
         self.updateHeight(B)
         self.updateHeight(A)
         return A
 
     def fix_parent(self, A, B):
         A.set_parent(B.get_parent())
-        if B.get_parent().get_left().get_value() == B.get_value():
+        if B == self.root:
+            A = self.root
+        elif B.get_parent().get_left().get_value() == B.get_value():
             A.get_parent().set_left(A)
         else:
             A.get_parent().set_right(A)
@@ -281,27 +299,87 @@ class AVLTree(object):
 
     def BFS(self, node):
         return node.get_left().height - node.get_right().height
+
     def rotate(self, node):
+        rb_count = 0
         balance_factor = self.BFS(node)
         if balance_factor == 2:
             if self.BFS(node.get_left()) == -1:
                 node = self.left_then_right(node.get_left())
+                rb_count+=2
             else:
-                node = self.right_rotate()
-            if self.BFS()
+                node = self.right_rotate(node)
+                rb_count+=1
+        elif balance_factor == -2:
+            if self.BFS(node.get_right()) == 1:
+                node = self.right_then_left(node.get_right())
+                rb_count+=2
+            else:
+                node = self.left_rotate(node)
+                rb_count+=1
+        return node, rb_count
 
+        # Print the tree
 
+    def display(self):
+        lines, *_ = self._display_aux(self.root)
+        for line in lines:
+            print(line)
 
+    def _display_aux(self, node):
+        """Returns list of strings, width, height, and horizontal coordinate of the root."""
+        # No child.
+        if not node.get_right().is_real_node() and not node.get_left().is_real_node():
+            line = '%s' % node.get_key()
+            width = len(line)
+            height = 1
+            middle = width // 2
+            return [line], width, height, middle
 
+        # Only left child.
+        if node.get_right() == self.virtualNode:
+            lines, n, p, x = self._display_aux(node.get_left)
+            s = '%s' % node.get_key()
+            u = len(s)
+            first_line = (x + 1) * ' ' + (n - x - 1) * '_' + s
+            second_line = x * ' ' + '/' + (n - x - 1 + u) * ' '
+            shifted_lines = [line + u * ' ' for line in lines]
+            return [first_line, second_line] + shifted_lines, n + u, p + 2, n + u // 2
 
+        # Only right child.
+        if not node.get_left().is_real_node():
+            lines, n, p, x = self._display_aux(node.get_right())
+            s = '%s' % node.get_key()
+            u = len(s)
+            first_line = s + x * '_' + (n - x) * ' '
+            second_line = (u + x) * ' ' + '\\' + (n - x - 1) * ' '
+            shifted_lines = [u * ' ' + line for line in lines]
+            return [first_line, second_line] + shifted_lines, n + u, p + 2, u // 2
 
+        # Two children.
+        left, n, p, x = self._display_aux(node.get_left())
+        right, m, q, y = self._display_aux(node.get_right())
+        s = '%s' % node.get_key()
+        u = len(s)
+        first_line = (x + 1) * ' ' + (n - x - 1) * '_' + s + y * '_' + (m - y) * ' '
+        second_line = x * ' ' + '/' + (n - x - 1 + u + y) * ' ' + '\\' + (m - y - 1) * ' '
+        if p < q:
+            left += [n * ' '] * (q - p)
+        elif q < p:
+            right += [m * ' '] * (p - q)
+        zipped_lines = zip(left, right)
+        lines = [first_line, second_line] + [a + u * ' ' + b for a, b in zipped_lines]
+        return lines, n + m + u, max(p, q) + 2, n + u // 2
 
-    def left_then_right(self,node):
+    def left_then_right(self, node):
         node = self.left_rotate(node)
         node = self.right_rotate(node.get_parent())
         return node
 
-
+    def right_then_left(self, node):
+        node = self.right_rotate(node)
+        node = self.left_rotate(node.get_parent())
+        return node
 
     """deletes node from the dictionary
 
@@ -390,12 +468,12 @@ class AVLTree(object):
     @returns: the item of rank i in self
     """
 
-    def select(self, i):
+    def select(self, node, i):
         r = self.root.get_size + 1
         if r == i:
             return self.root
         elif i < r:
-            return self.select(self.root.left,i)
+            return self.select(self.root.left, i)
         else:
             return self.select(self.root.right, i - r)
 
@@ -407,3 +485,11 @@ class AVLTree(object):
 
     def get_root(self):
         return self.root
+
+
+myTree = AVLTree()
+nums = [33, 13, 52, 9, 21, 61, 8, 11, 7]
+for num in nums:
+    root = myTree.insert(num, 1)
+
+myTree.display()
