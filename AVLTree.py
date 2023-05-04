@@ -261,7 +261,7 @@ class AVLTree(object):
             elif abs(balance_factor) < 2 and y.get_height() != temp_height:
                 y = y.get_parent()
             elif abs(balance_factor) == 2:
-                y, rb_num = self.rotate(y)
+                y, rb_num = self.rotate(y, balance_factor)
                 y = y.get_parent()
         return rb_num
 
@@ -290,7 +290,7 @@ class AVLTree(object):
     def fix_parent(self, A, B):
         A.set_parent(B.get_parent())
         if B == self.root:
-            A = self.root
+            self.root = A
         elif B.get_parent().get_left().get_value() == B.get_value():
             A.get_parent().set_left(A)
         else:
@@ -300,9 +300,9 @@ class AVLTree(object):
     def BFS(self, node):
         return node.get_left().height - node.get_right().height
 
-    def rotate(self, node):
+    def rotate(self, node, BFS):
         rb_count = 0
-        balance_factor = self.BFS(node)
+        balance_factor = BFS
         if balance_factor == 2:
             if self.BFS(node.get_left()) == -1:
                 node = self.left_then_right(node.get_left())
@@ -321,8 +321,8 @@ class AVLTree(object):
 
         # Print the tree
 
-    def display(self):
-        lines, *_ = self._display_aux(self.root)
+    def display(self, root):
+        lines, *_ = self._display_aux(root)
         for line in lines:
             print(line)
 
@@ -337,8 +337,8 @@ class AVLTree(object):
             return [line], width, height, middle
 
         # Only left child.
-        if node.get_right() == self.virtualNode:
-            lines, n, p, x = self._display_aux(node.get_left)
+        if not node.get_right().is_real_node() and node.get_left().is_real_node():
+            lines, n, p, x = self._display_aux(node.get_left())
             s = '%s' % node.get_key()
             u = len(s)
             first_line = (x + 1) * ' ' + (n - x - 1) * '_' + s
@@ -347,7 +347,7 @@ class AVLTree(object):
             return [first_line, second_line] + shifted_lines, n + u, p + 2, n + u // 2
 
         # Only right child.
-        if not node.get_left().is_real_node():
+        if not node.get_left().is_real_node() and node.get_right().is_real_node():
             lines, n, p, x = self._display_aux(node.get_right())
             s = '%s' % node.get_key()
             u = len(s)
@@ -473,9 +473,9 @@ class AVLTree(object):
         if r == i:
             return self.root
         elif i < r:
-            return self.select(self.root.left, i)
+            return self.select(node, i)
         else:
-            return self.select(self.root.right, i - r)
+            return self.select(node, i - r)
 
     """returns the root of the tree representing the dictionary
 
@@ -488,8 +488,8 @@ class AVLTree(object):
 
 
 myTree = AVLTree()
-nums = [33, 13, 52, 9, 21, 61, 8, 11, 7]
+nums = [4,3,2]
 for num in nums:
     root = myTree.insert(num, 1)
 
-myTree.display()
+myTree.display(myTree.root)
