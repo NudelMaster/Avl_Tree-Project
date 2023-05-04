@@ -261,8 +261,12 @@ class AVLTree(object):
             elif abs(balance_factor) < 2 and y.get_height() != temp_height:
                 y = y.get_parent()
             elif abs(balance_factor) == 2:
+                print("\n Before rotate")
+                self.display(self.root)
                 y, rb_num = self.rotate(y, balance_factor)
                 y = y.get_parent()
+                print("\n After rotate")
+                self.display(self.root)
         return rb_num
 
     def left_rotate(self, node):
@@ -329,15 +333,19 @@ class AVLTree(object):
     def _display_aux(self, node):
         """Returns list of strings, width, height, and horizontal coordinate of the root."""
         # No child.
-        if not node.get_right().is_real_node() and not node.get_left().is_real_node():
-            line = '%s' % node.get_key()
+        if not node.get_right() and not node.get_left():
+            if not node.is_real_node():
+                line = '%s' % "V"
+            else:
+                line = '%s' % node.get_key()
+
             width = len(line)
             height = 1
             middle = width // 2
             return [line], width, height, middle
 
         # Only left child.
-        if not node.get_right().is_real_node() and node.get_left().is_real_node():
+        if not node.get_right() and node.get_left():
             lines, n, p, x = self._display_aux(node.get_left())
             s = '%s' % node.get_key()
             u = len(s)
@@ -347,7 +355,7 @@ class AVLTree(object):
             return [first_line, second_line] + shifted_lines, n + u, p + 2, n + u // 2
 
         # Only right child.
-        if not node.get_left().is_real_node() and node.get_right().is_real_node():
+        if not node.get_left() and node.get_right():
             lines, n, p, x = self._display_aux(node.get_right())
             s = '%s' % node.get_key()
             u = len(s)
@@ -373,12 +381,20 @@ class AVLTree(object):
 
     def left_then_right(self, node):
         node = self.left_rotate(node)
+        print("first rotate \n")
+        self.display(self.root)
         node = self.right_rotate(node.get_parent())
+        print("second rotate \n")
+        self.display(self.root)
         return node
 
     def right_then_left(self, node):
         node = self.right_rotate(node)
+        print("first rotate")
+        self.display(self.root)
         node = self.left_rotate(node.get_parent())
+        print("second rotate")
+        self.display(self.root)
         return node
 
     """deletes node from the dictionary
@@ -487,9 +503,35 @@ class AVLTree(object):
         return self.root
 
 
-myTree = AVLTree()
+firstTree = AVLTree()
+nums = [2,3,4]
+for num in nums:
+    root = firstTree.insert(num, 1)
+
+
+
+secondTree = AVLTree()
 nums = [4,3,2]
 for num in nums:
-    root = myTree.insert(num, 1)
+    root = secondTree.insert(num, 1)
 
-myTree.display(myTree.root)
+
+
+
+thirdTree = AVLTree()
+nums = [2,4,3]
+for num in nums:
+    root = thirdTree.insert(num, 1)
+
+
+
+FourthTree = AVLTree()
+nums = [4,2,3]
+for num in nums:
+    root = FourthTree.insert(num, 1)
+
+
+
+
+
+
