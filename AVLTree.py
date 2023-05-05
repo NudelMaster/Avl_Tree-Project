@@ -295,7 +295,7 @@ class AVLTree(object):
         A.set_parent(B.get_parent())
         if B == self.root:
             self.root = A
-        elif B.get_parent().get_left().get_value() == B.get_value():
+        elif B.get_parent().get_left().get_key() == B.get_key():
             A.get_parent().set_left(A)
         else:
             A.get_parent().set_right(A)
@@ -504,31 +504,13 @@ class AVLTree(object):
 
 
 firstTree = AVLTree()
-nums = [2,3,4]
+nums = [1,3,5,7,9]
 for num in nums:
     root = firstTree.insert(num, 1)
 
 
 
-secondTree = AVLTree()
-nums = [4,3,2]
-for num in nums:
-    root = secondTree.insert(num, 1)
 
-
-
-
-thirdTree = AVLTree()
-nums = [2,4,3]
-for num in nums:
-    root = thirdTree.insert(num, 1)
-
-
-
-FourthTree = AVLTree()
-nums = [4,2,3]
-for num in nums:
-    root = FourthTree.insert(num, 1)
 
 
 
