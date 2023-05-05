@@ -202,7 +202,7 @@ class AVLTree(object):
 
     def updateHeight(self, node):
         left_height = max(node.get_left().get_height(), 0)
-        right_height = max(node.get_right().get_height(),0)
+        right_height = max(node.get_right().get_height(), 0)
         if self.is_leaf(node):
             node.set_height(0)
         else:
@@ -210,6 +210,7 @@ class AVLTree(object):
 
     def is_leaf(self, node):
         return node.get_left() == self.virtualNode and node.get_right() == self.virtualNode
+
     def updateSize(self, node):
         node.set_size(1 + node.left.size, node.right.size)
 
@@ -247,6 +248,7 @@ class AVLTree(object):
                     node.get_right().set_parent(node)
                     return node.get_right()
                 return insert_rec(node.get_right(), key, val, node)
+
         y = insert_rec(root, key, val, self.virtualNode)  # get inserted node
         y.set_left(self.virtualNode)
         y.set_right(self.virtualNode)
@@ -310,17 +312,17 @@ class AVLTree(object):
         if balance_factor == 2:
             if self.BFS(node.get_left()) == -1:
                 node = self.left_then_right(node.get_left())
-                rb_count+=2
+                rb_count += 2
             else:
                 node = self.right_rotate(node)
-                rb_count+=1
+                rb_count += 1
         elif balance_factor == -2:
             if self.BFS(node.get_right()) == 1:
                 node = self.right_then_left(node.get_right())
-                rb_count+=2
+                rb_count += 2
             else:
                 node = self.left_rotate(node)
-                rb_count+=1
+                rb_count += 1
         return node, rb_count
 
         # Print the tree
@@ -406,7 +408,71 @@ class AVLTree(object):
     """
 
     def delete(self, node):
-        return -1
+        left = node.get_left()
+        right = node.get_right()
+        parent = node.get_parent()
+        if node == self.root:
+            self.delete_root(node)
+            return 0
+        else:
+            if not left.is_real_node() and right.is_real_node():  # no left child
+                if node.key < parent.key:
+                    right.set_parent(parent)
+                    parent.set_left(right)
+                else:
+                    right.set_parent(parent)
+                    parent.set_right(right)
+            if not right.is_real_node() and left.is_real_node(): # no right child
+                left.set_parent(parent)
+                parent.set_left(left)
+            else: # both left and right children exist
+                if not right.get_left().is_real_node(): # the right child is the minimal
+                    parent.set_right(right.get_right())
+                    parent.get_right().set_parent(parent)
+                else:
+                    temp_tree = right.get_left()
+                    while temp_tree.get_left.is_real_node():  # getting minimum value from right subtree
+                        temp_tree = temp_tree.get_left()
+                    if temp_tree == right.get_left(): # minimum was the left child
+                        if temp_tree.get_right().is_real_node():
+                            parent.set_right(temp_tree.get_right)
+                            parent.get_right().set_right(parent)
+                            temp_tree.get_right().set_right(right.get_right())
+                            temp_tree.set_left(temp_tree)
+                        else:
+                            parent.set_right(temp_tree)
+                            temp_tree_parent = temp_tree.get_parent()
+                            temp_tree.set_parent(parent)
+                            temp_tree_parent.set_left(temp_tree.get_right())
+                            temp_tree.set_right(right.get_right)
+
+    def delete_root(self, node):
+        left = node.get_left()
+        right = node.get_right()
+        if not left.is_real_node() and right.is_real_node(): # only right child, right child can be of size 1 only
+            right.set_parent(None)
+            self.root = right
+        if left.is_real_node() and not right.is_real_node(): # only left child, left child can be of size 1 only
+            left.set_parent(None)
+            self.root = left
+        else: # two children
+            if not right.get_left().is_real_node(): # if the right node is the minimum
+                self.root = right
+                right.set_parent(None)
+                right.set_left(left)
+            else:
+                temp_tree = right
+                while temp_tree.get_left().is_real_node():  # getting minimum value from right subtree
+                    temp_tree = temp_tree.get_left()
+                temp_tree_parent = temp_tree.get_parent()
+                temp_tree.set_parent(None)
+                self.root = temp_tree
+                temp_tree_parent.set_left(temp_tree.get_right())
+                temp_tree.set_left(left)
+                temp_tree.set_right(temp_tree_parent)
+
+        return
+
 
     """returns an array representing dictionary 
 
@@ -504,16 +570,8 @@ class AVLTree(object):
 
 
 firstTree = AVLTree()
-nums = [1,3,5,7,9]
+nums = [1, 3, 5, 7, 9]
 for num in nums:
     root = firstTree.insert(num, 1)
-
-
-
-
-
-
-
-
-
-
+firstTree.delete(firstTree.root.get_right())
+firstTree.display(firstTree.root)
