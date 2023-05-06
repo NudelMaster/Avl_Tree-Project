@@ -309,14 +309,14 @@ class AVLTree(object):
     def rotate(self, node, BFS):
         rb_count = 0
         balance_factor = BFS
-        if balance_factor == 2:
+        if balance_factor >= 2:
             if self.BFS(node.get_left()) == -1:
                 node = self.left_then_right(node.get_left())
                 rb_count += 2
             else:
                 node = self.right_rotate(node)
                 rb_count += 1
-        elif balance_factor == -2:
+        elif balance_factor <= -2:
             if self.BFS(node.get_right()) == 1:
                 node = self.right_then_left(node.get_right())
                 rb_count += 2
@@ -409,7 +409,36 @@ class AVLTree(object):
 
     def delete(self, node):
         y = self.BTS_delete(node)
+        if type(y) == int:
+            return 0
+        rb_num = 0
+        balance_factor = self.BFS(y)
+        if abs(balance_factor) == 2:
+            print("\n Before rotate")
+            self.display(self.root)
+            y, rb_num = self.rotate(y, balance_factor)
+            print("\n After rotate")
+            self.display(self.root)
+
         y = y.get_parent()
+
+        while y:
+            temp_height = y.get_height()
+            self.updateHeight(y)
+            balance_factor = self.BFS(y)
+            if abs(balance_factor) < 2 and y.get_height() == temp_height:
+                break
+            elif abs(balance_factor) < 2 and y.get_height() != temp_height:
+                y = y.get_parent()
+            elif abs(balance_factor) >= 2:
+                print("\n Before rotate")
+                self.display(self.root)
+                y, rb_num = self.rotate(y, balance_factor)
+                y = y.get_parent()
+                print("\n After rotate")
+                self.display(self.root)
+        return rb_num
+
     def BTS_delete(self, node):
         left = node.get_left()
         right = node.get_right()
@@ -423,12 +452,14 @@ class AVLTree(object):
                     parent.set_left(right)
                 else:
                     parent.set_right(right)
+                self.updateHeight(right)
             elif not right.is_real_node() and left.is_real_node():  # no right child
                 left.set_parent(parent)
                 if node.key < parent.key:
                     parent.set_left(left)
                 else:
                     parent.set_right(left)
+                self.updateHeight(left)
             elif not right.is_real_node() and not left.is_real_node():  # leaf
                 if node.key < parent.key:
                     parent.set_left(left)
@@ -439,6 +470,9 @@ class AVLTree(object):
                     right.set_parent(parent)
                     parent.set_right(right)
                     right.set_left(left)
+                    right.get_left().set_parent(right)
+                    self.updateHeight(right)
+                    return right
                 else:
                     temp_min = right.get_left()
                     while temp_min.get_left().is_real_node():
@@ -455,6 +489,8 @@ class AVLTree(object):
                     temp_min.get_left().set_parent(temp_min)
                     temp_min.set_right(right)
                     temp_min.get_right().set_parent(temp_min)
+                    self.updateHeight(temp_min)
+                    self.updateHeight(temp_parent)
         return node
 
 
@@ -474,6 +510,7 @@ class AVLTree(object):
                 right.set_parent(None)
                 self.root = right
                 right.set_left(left)
+                self.updateHeight(self.root)
             else:
                 temp_min = right.get_left()
                 while temp_min.get_left().is_real_node():
@@ -487,7 +524,9 @@ class AVLTree(object):
                 temp_min.set_left(left)
                 right.set_parent(self.root)
                 left.set_parent(self.root)
-        return
+                self.updateHeight(self.root)
+
+        return 0
 
     """returns an array representing dictionary 
 
@@ -585,11 +624,12 @@ class AVLTree(object):
 
 
 firstTree = AVLTree()
-nums = [44, 17, 28, 88, 55, 65, 82, 54, 29, 76, 80, 78]
+nums = [15, 8, 22, 20, 4, 11, 24, 2, 9, 12, 18, 13]
 for num in nums:
     root = firstTree.insert(num, 1)
-firstTree.delete(firstTree.root)
 firstTree.display(firstTree.root)
+firstTree.delete(firstTree.root.get_right().get_right())
+'''firstTree.display(firstTree.root)
 firstTree.delete(firstTree.root.get_right())
 firstTree.display(firstTree.root)
 
@@ -601,3 +641,4 @@ firstTree.delete(firstTree.root.get_right())
 firstTree.display(firstTree.root)
 
 #firstTree.delete(firstTree.root)
+'''
