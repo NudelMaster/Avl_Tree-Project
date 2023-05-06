@@ -408,71 +408,86 @@ class AVLTree(object):
     """
 
     def delete(self, node):
+        y = self.BTS_delete(node)
+        y = y.get_parent()
+    def BTS_delete(self, node):
         left = node.get_left()
         right = node.get_right()
         parent = node.get_parent()
         if node == self.root:
             self.delete_root(node)
-            return 0
         else:
             if not left.is_real_node() and right.is_real_node():  # no left child
+                right.set_parent(parent)
                 if node.key < parent.key:
-                    right.set_parent(parent)
                     parent.set_left(right)
                 else:
+                    parent.set_right(right)
+            elif not right.is_real_node() and left.is_real_node():  # no right child
+                left.set_parent(parent)
+                if node.key < parent.key:
+                    parent.set_left(left)
+                else:
+                    parent.set_right(left)
+            elif not right.is_real_node() and not left.is_real_node():  # leaf
+                if node.key < parent.key:
+                    parent.set_left(left)
+                else:
+                    parent.set_right(right)
+            else:  # both left and right children exist
+                if not right.get_left().is_real_node():  # the right child is the minimal
                     right.set_parent(parent)
                     parent.set_right(right)
-            if not right.is_real_node() and left.is_real_node(): # no right child
-                left.set_parent(parent)
-                parent.set_left(left)
-            else: # both left and right children exist
-                if not right.get_left().is_real_node(): # the right child is the minimal
-                    parent.set_right(right.get_right())
-                    parent.get_right().set_parent(parent)
+                    right.set_left(left)
                 else:
-                    temp_tree = right.get_left()
-                    while temp_tree.get_left.is_real_node():  # getting minimum value from right subtree
-                        temp_tree = temp_tree.get_left()
-                    if temp_tree == right.get_left(): # minimum was the left child
-                        if temp_tree.get_right().is_real_node():
-                            parent.set_right(temp_tree.get_right)
-                            parent.get_right().set_right(parent)
-                            temp_tree.get_right().set_right(right.get_right())
-                            temp_tree.set_left(temp_tree)
-                        else:
-                            parent.set_right(temp_tree)
-                            temp_tree_parent = temp_tree.get_parent()
-                            temp_tree.set_parent(parent)
-                            temp_tree_parent.set_left(temp_tree.get_right())
-                            temp_tree.set_right(right.get_right)
+                    temp_min = right.get_left()
+                    while temp_min.get_left().is_real_node():
+                        temp_min = temp_min.get_left()
+                    temp_parent = temp_min.get_parent()
+                    temp_min.set_parent(parent)
+                    if node.key < parent.key:
+                        parent.set_left(temp_min)
+                    else:
+                        parent.set_right(temp_min)
+                    temp_parent.set_left(temp_min.get_right())
+                    temp_min.get_right().set_parent(temp_parent)
+                    temp_min.set_left(left)
+                    temp_min.get_left().set_parent(temp_min)
+                    temp_min.set_right(right)
+                    temp_min.get_right().set_parent(temp_min)
+        return node
+
+
+
 
     def delete_root(self, node):
         left = node.get_left()
         right = node.get_right()
-        if not left.is_real_node() and right.is_real_node(): # only right child, right child can be of size 1 only
+        if not left.is_real_node() and right.is_real_node():  # only right child, right child can be of size 1 only
             right.set_parent(None)
             self.root = right
-        if left.is_real_node() and not right.is_real_node(): # only left child, left child can be of size 1 only
+        if left.is_real_node() and not right.is_real_node():  # only left child, left child can be of size 1 only
             left.set_parent(None)
             self.root = left
-        else: # two children
-            if not right.get_left().is_real_node(): # if the right node is the minimum
-                self.root = right
+        else:  # two children
+            if not right.get_left().is_real_node():  # the right child is the minimal
                 right.set_parent(None)
+                self.root = right
                 right.set_left(left)
             else:
-                temp_tree = right
-                while temp_tree.get_left().is_real_node():  # getting minimum value from right subtree
-                    temp_tree = temp_tree.get_left()
-                temp_tree_parent = temp_tree.get_parent()
-                temp_tree.set_parent(None)
-                self.root = temp_tree
-                temp_tree_parent.set_left(temp_tree.get_right())
-                temp_tree.set_left(left)
-                temp_tree.set_right(temp_tree_parent)
-
+                temp_min = right.get_left()
+                while temp_min.get_left().is_real_node():
+                    temp_min = temp_min.get_left()
+                temp_parent = temp_min.get_parent()
+                self.root = temp_min
+                temp_min.set_parent(None)
+                temp_parent.set_left(temp_min.get_right())
+                temp_min.get_right().set_parent(temp_parent)
+                temp_min.set_right(right)
+                temp_min.set_left(left)
+                right.set_parent(self.root)
+                left.set_parent(self.root)
         return
-
 
     """returns an array representing dictionary 
 
@@ -570,8 +585,19 @@ class AVLTree(object):
 
 
 firstTree = AVLTree()
-nums = [1, 3, 5, 7, 9]
+nums = [44, 17, 28, 88, 55, 65, 82, 54, 29, 76, 80, 78]
 for num in nums:
     root = firstTree.insert(num, 1)
+firstTree.delete(firstTree.root)
+firstTree.display(firstTree.root)
 firstTree.delete(firstTree.root.get_right())
 firstTree.display(firstTree.root)
+
+firstTree.delete(firstTree.root.get_left())
+firstTree.display(firstTree.root)
+firstTree.delete(firstTree.root.get_left().get_right())
+firstTree.display(firstTree.root)
+firstTree.delete(firstTree.root.get_right())
+firstTree.display(firstTree.root)
+
+#firstTree.delete(firstTree.root)
