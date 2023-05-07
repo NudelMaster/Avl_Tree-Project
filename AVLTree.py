@@ -177,6 +177,11 @@ class AVLTree(object):
         virtualNode = AVLNode(None, -1)
         self.root = None
         self.virtualNode = virtualNode
+        
+    def __init__(self, node):
+        virtualNode = AVLNode(None, -1)
+        self.root = node
+        self.virtualNode = virtualNode
 
     # add your fields here
 
@@ -575,7 +580,48 @@ class AVLTree(object):
     """
 
     def join(self, tree, key, val):
-        return None
+            def join(self, tree, key, val):
+        retval = abs(self.root.hight - tree.root.hight) + 1
+        if self.get_root().get_key < key:
+            self.rec_join(tree, key, val)
+        else:
+            tree.rec_join(self, key, val)
+        return retval
+
+    def UnbalancedJoin(self, tree, key, val):
+        node = AVLNode(key, val)
+        node.left = self.root
+        node.right = tree.root
+        self.root.set_parent(node)
+        tree.root.set_parent(node)
+        return node
+
+    def rec_join(self, big, key, val):
+        if abs(self.get_root().get_hight() - big.get_root().get_hight()) <= 1:
+            new_root = self.UnbalancedJoin(big, key, val)
+            new_root.set_hight(max(self.get_root().get_hight(), big.get_root().get_hight()) + 1)
+            self.root = new_root
+        elif self.root.hight > big.root.hight:
+            new_root = AVLTree(self.get_root().get_right()).rec_join(big, key, val)
+            self.set_right(new_root)
+            new_root.set_parent(self.get_root())
+            self.root = self.Balance(new_root)
+        else:
+            new_root = AVLTree(self.get_root().get_left()).rec_join(big, key, val)
+            self.set_left(new_root)
+            new_root.set_parent(self.get_root())
+            self.root = self.Balance(new_root)
+        return self.root
+
+    def Balance(self, node):
+        true_root = node
+        while node.is_real_node():
+            bfs = self.BFS(node)
+            (true_root, rotate_num) = self.rotate(node, bfs)
+            if rotate_num != 0:
+                break
+            node = true_root.get_parent()
+        return true_root
 
     """compute the rank of node in the self
 
