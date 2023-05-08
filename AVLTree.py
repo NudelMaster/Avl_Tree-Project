@@ -563,7 +563,19 @@ class AVLTree(object):
     """
 
     def split(self, node):
-        return None
+        left = AVLTree(node.left)
+        right = AVLTree(node.right)
+        father = node.parent()
+        while father.is_real_node:
+            if father.right is node:
+                AVLTree(father.left).join(left, father.key, father.value)
+            else:
+                AVLTree(father.right).join(right, father.key, father.value)
+            node = father
+            father = node.parent
+        return left, right
+
+        
 
     """joins self with key and another AVLTree
 
