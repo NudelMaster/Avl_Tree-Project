@@ -540,7 +540,14 @@ class AVLTree(object):
     """
 
     def avl_to_array(self):
-        return None
+        def avl_to_array_rec(array, node):
+            if node.is_real_node:
+                avl_to_array_rec(array, node.left)
+                array.append(node)
+                avl_to_array_rec(array, node.right)
+        ret_list = []
+        avl_to_array_rec(ret_list, self.root)
+        return ret_list
 
     """returns the number of items in dictionary 
 
