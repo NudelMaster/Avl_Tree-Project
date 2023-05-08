@@ -412,9 +412,9 @@ class AVLTree(object):
     @returns: the number of rebalancing operation due to AVL rebalancing
     """
 
-    def delete(self, node):
+        def delete(self, node):
         y = self.BTS_delete(node)
-        if type(y) == int:
+        if y is None:
             return 0
         rb_num = 0
         balance_factor = self.BFS(y)
@@ -449,7 +449,8 @@ class AVLTree(object):
         right = node.get_right()
         parent = node.get_parent()
         if node == self.root:
-            self.delete_root(node)
+            y = self.delete_root(node)
+            return y
         else:
             if not left.is_real_node() and right.is_real_node():  # no left child
                 right.set_parent(parent)
@@ -473,7 +474,10 @@ class AVLTree(object):
             else:  # both left and right children exist
                 if not right.get_left().is_real_node():  # the right child is the minimal
                     right.set_parent(parent)
-                    parent.set_right(right)
+                    if right.key > node.key:
+                        parent.set_left(right)
+                    else:
+                        parent.set_right(right)
                     right.set_left(left)
                     right.get_left().set_parent(right)
                     self.updateHeight(right)
@@ -500,7 +504,6 @@ class AVLTree(object):
 
 
 
-
     def delete_root(self, node):
         left = node.get_left()
         right = node.get_right()
@@ -510,11 +513,15 @@ class AVLTree(object):
         if left.is_real_node() and not right.is_real_node():  # only left child, left child can be of size 1 only
             left.set_parent(None)
             self.root = left
+        if self.is_leaf(node):
+            self.root = None
+            return self.root
         else:  # two children
             if not right.get_left().is_real_node():  # the right child is the minimal
                 right.set_parent(None)
                 self.root = right
                 right.set_left(left)
+                left.set_parent(right)
                 self.updateHeight(self.root)
             else:
                 temp_min = right.get_left()
@@ -529,9 +536,13 @@ class AVLTree(object):
                 temp_min.set_left(left)
                 right.set_parent(self.root)
                 left.set_parent(self.root)
-                self.updateHeight(self.root)
-
-        return 0
+                temp = temp_parent
+                while temp_parent:
+                    self.updateHeight(temp_parent)
+                    temp_parent = temp_parent.get_parent()
+                self.updateHeight(temp)
+                return temp
+        return self.root
 
     """returns an array representing dictionary 
 
