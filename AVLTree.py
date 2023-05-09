@@ -444,7 +444,7 @@ class AVLTree(object):
                 self.display(self.root)
         return rb_num
 
-    def BTS_delete(self, node):
+        def BTS_delete(self, node):
         left = node.get_left()
         right = node.get_right()
         parent = node.get_parent()
@@ -474,10 +474,10 @@ class AVLTree(object):
             else:  # both left and right children exist
                 if not right.get_left().is_real_node():  # the right child is the minimal
                     right.set_parent(parent)
-                    if right.key > node.key:
-                        parent.set_left(right)
-                    else:
+                    if right.key > parent.get_key():
                         parent.set_right(right)
+                    else:
+                        parent.set_left(right)
                     right.set_left(left)
                     right.get_left().set_parent(right)
                     self.updateHeight(right)
