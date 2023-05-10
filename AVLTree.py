@@ -161,6 +161,21 @@ class AVLNode(object):
     def is_real_node(self):
         return self.height > -1
 
+    def min_node(self):
+    while self.left.is_real_node():
+        self = self.get_left()
+    return self
+   
+    def successor(self):
+        if self.right.is_real_node():
+            return self.right.min_node()
+        temp = self.parent
+        while temp and self == temp.right:
+            self = temp
+            temp = self.parent
+
+        return temp
+
 
 """
 A class implementing an AVL tree.
@@ -237,6 +252,7 @@ class AVLTree(object):
             self.root.set_left(self.virtualNode)
             self.root.set_right(self.virtualNode)
             self.updateHeight(self.root)
+            self.root.set_size(1)
             return 0
         rb_num = 0
 
@@ -260,6 +276,7 @@ class AVLTree(object):
         self.updateHeight(y)
         y = y.get_parent()
         while y:  # check if we the node is not null (happens after we get the parent of the root)
+            self.updateSize(y)
             temp_height = y.get_height()
             self.updateHeight(y)
             balance_factor = self.BFS(y)
@@ -285,6 +302,8 @@ class AVLTree(object):
         self.fix_parent(A, B)
         self.updateHeight(B)
         self.updateHeight(A)
+        self.updateSize(B)
+        self.updateSize(A)
         return A
 
     def right_rotate(self, node):
@@ -296,6 +315,8 @@ class AVLTree(object):
         self.fix_parent(A, B)
         self.updateHeight(B)
         self.updateHeight(A)
+        self.updateSize(B)
+        self.updateSize(A)
         return A
 
     def fix_parent(self, A, B):
@@ -412,29 +433,21 @@ class AVLTree(object):
     @returns: the number of rebalancing operation due to AVL rebalancing
     """
 
-        def delete(self, node):
-        y = self.BTS_delete(node)
-        if y is None:
+       def delete(self, node):
+        y = self.BTS_delete(node) # get parent of node that was deleted, if we delete root we get the node of the previous parent of the new root
+        if y is None: # if we get an empty tree, after deleting the root of size 1
             return 0
         rb_num = 0
-        balance_factor = self.BFS(y)
-        if abs(balance_factor) == 2:
-            print("\n Before rotate")
-            self.display(self.root)
-            y, rb_num = self.rotate(y, balance_factor)
-            print("\n After rotate")
-            self.display(self.root)
-
-        y = y.get_parent()
-
         while y:
+            y.size -= 1
             temp_height = y.get_height()
             self.updateHeight(y)
             balance_factor = self.BFS(y)
             if abs(balance_factor) < 2 and y.get_height() == temp_height:
-                break
+                y = y.get_parent()
             elif abs(balance_factor) < 2 and y.get_height() != temp_height:
                 y = y.get_parent()
+                rb_num += 1
             elif abs(balance_factor) >= 2:
                 print("\n Before rotate")
                 self.display(self.root)
@@ -444,105 +457,48 @@ class AVLTree(object):
                 self.display(self.root)
         return rb_num
 
-        def BTS_delete(self, node):
+    def BTS_delete(self, node):
         left = node.get_left()
         right = node.get_right()
-        parent = node.get_parent()
-        if node == self.root:
-            y = self.delete_root(node)
-            return y
-        else:
-            if not left.is_real_node() and right.is_real_node():  # no left child
-                right.set_parent(parent)
-                if node.key < parent.key:
-                    parent.set_left(right)
-                else:
-                    parent.set_right(right)
-                self.updateHeight(right)
-            elif not right.is_real_node() and left.is_real_node():  # no right child
-                left.set_parent(parent)
-                if node.key < parent.key:
-                    parent.set_left(left)
-                else:
-                    parent.set_right(left)
-                self.updateHeight(left)
-            elif not right.is_real_node() and not left.is_real_node():  # leaf
-                if node.key < parent.key:
-                    parent.set_left(left)
-                else:
-                    parent.set_right(right)
-            else:  # both left and right children exist
-                if not right.get_left().is_real_node():  # the right child is the minimal
-                    right.set_parent(parent)
-                    if right.key > parent.get_key():
-                        parent.set_right(right)
-                    else:
-                        parent.set_left(right)
-                    right.set_left(left)
-                    right.get_left().set_parent(right)
-                    self.updateHeight(right)
-                    return right
-                else:
-                    temp_min = right.get_left()
-                    while temp_min.get_left().is_real_node():
-                        temp_min = temp_min.get_left()
-                    temp_parent = temp_min.get_parent()
-                    temp_min.set_parent(parent)
-                    if node.key < parent.key:
-                        parent.set_left(temp_min)
-                    else:
-                        parent.set_right(temp_min)
-                    temp_parent.set_left(temp_min.get_right())
-                    temp_min.get_right().set_parent(temp_parent)
-                    temp_min.set_left(left)
-                    temp_min.get_left().set_parent(temp_min)
-                    temp_min.set_right(right)
-                    temp_min.get_right().set_parent(temp_min)
-                    self.updateHeight(temp_min)
-                    self.updateHeight(temp_parent)
-        return node
 
-
-
-    def delete_root(self, node):
-        left = node.get_left()
-        right = node.get_right()
-        if not left.is_real_node() and right.is_real_node():  # only right child, right child can be of size 1 only
-            right.set_parent(None)
-            self.root = right
-        if left.is_real_node() and not right.is_real_node():  # only left child, left child can be of size 1 only
-            left.set_parent(None)
-            self.root = left
-        if self.is_leaf(node):
-            self.root = None
-            return self.root
-        else:  # two children
-            if not right.get_left().is_real_node():  # the right child is the minimal
-                right.set_parent(None)
-                self.root = right
-                right.set_left(left)
-                left.set_parent(right)
-                self.updateHeight(self.root)
+        if node.is_leaf():
+            if node is self.root:
+                self.root = None
+                return self.root
+            if node.get_parent().get_left() is node:
+                node.get_parent().set_left(self.virtualNode)
             else:
-                temp_min = right.get_left()
-                while temp_min.get_left().is_real_node():
-                    temp_min = temp_min.get_left()
-                temp_parent = temp_min.get_parent()
-                self.root = temp_min
-                temp_min.set_parent(None)
-                temp_parent.set_left(temp_min.get_right())
-                temp_min.get_right().set_parent(temp_parent)
-                temp_min.set_right(right)
-                temp_min.set_left(left)
-                right.set_parent(self.root)
-                left.set_parent(self.root)
-                temp = temp_parent
-                while temp_parent:
-                    self.updateHeight(temp_parent)
-                    temp_parent = temp_parent.get_parent()
-                self.updateHeight(temp)
-                return temp
-        return self.root
+                node.get_parent().set_right(self.virtualNode)
+            return node.get_parent()
+        elif not left.is_real_node() and right.is_real_node():  # no left child
+            node.set_key(right.get_key())
+            node.set_value(right.get_value())
+            node.set_right(self.virtualNode)
+            node.get_right().set_parent(node)
+            return node
+        elif not right.is_real_node() and left.is_real_node():  # no right child
+            node.set_key(left.get_key())
+            node.set_value(left.get_value())
+            node.set_left(self.virtualNode)
+            node.get_left().set_parent(node)
+            return node
+        else: # right child and left child exist
+            successor = right.min_node()
+            successor_parent = successor.get_parent()
+            node.set_key(successor.get_key())
+            node.set_value(successor.get_value())
+            node.set_right(self.delete_rec(right, successor.get_key()))
+            return successor_parent
+
+
+    def delete_rec(self, node, key):
+        if key < node.get_key():
+            node.set_left(self.delete_rec(node.get_left(), key))
+        else:
+            temp = node.get_right()
+            node = self.virtualNode
+            return temp
+        return node
 
     """returns an array representing dictionary 
 
