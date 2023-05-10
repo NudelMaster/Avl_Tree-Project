@@ -281,9 +281,10 @@ class AVLTree(object):
             self.updateHeight(y)
             balance_factor = self.BFS(y)
             if abs(balance_factor) < 2 and y.get_height() == temp_height:
-                break
+                y = y.get_parent()
             elif abs(balance_factor) < 2 and y.get_height() != temp_height:
                 y = y.get_parent()
+                rb_num += 1
             elif abs(balance_factor) == 2:
                 print("\n Before rotate")
                 self.display(self.root)
