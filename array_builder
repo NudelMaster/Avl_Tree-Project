@@ -1,0 +1,22 @@
+import random
+def array_builder(i, array_type):
+    n = pow(2,i)*1500
+    return_array = []
+    while n > 0:
+        return_array.append(n)
+        n -= 1
+    if array_type == "reverse":
+        return return_array
+    elif array_type == "shuffle":
+        random.shuffle(return_array)
+        return return_array
+    elif array_type == "almost":
+        return_array.reverse()
+        split_arrays = [return_array[i: i + 300] for i in range(0, len(return_array), 300)]
+        return_array = []
+        for array in split_arrays:
+            array.reverse()
+            return_array = return_array + array
+        return return_array
+    else:
+        return None
