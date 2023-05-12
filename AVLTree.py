@@ -654,6 +654,25 @@ class AVLTree(object):
 
     def get_root(self):
         return self.root
+    
+    def max_insert_temp(self, node):
+    suspect = self.max
+    while suspect.is_real_node():
+        if suspect.parent.is_real_node() and suspect.parent.right is suspect:
+            if suspect.key > node.key:
+                if suspect.parent.key > node.key:
+                    suspect = suspect.parent
+                else:
+                    suspect = suspect.left
+            else:
+                suspect = suspect.right
+        else:
+            if suspect.key > node.key:
+                suspect = suspect.left
+            else:
+                suspect = suspect.right
+    node = suspect
+
 
 
 firstTree = AVLTree()
