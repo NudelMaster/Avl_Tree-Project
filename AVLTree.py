@@ -6,6 +6,7 @@
 
 
 """A class represnting a node in an AVL tree"""
+import random
 import sys
 
 
@@ -158,13 +159,17 @@ class AVLNode(object):
     @returns: False if self is a virtual node, True otherwise.
     """
 
+    def is_leaf(self):
+        return not self.left.is_real_node() and not self.right.is_real_node()
+
     def is_real_node(self):
         return self.height > -1
 
     def min_node(self):
-        while self.left.is_real_node():
-            self = self.get_left()
-        return self
+        temp = self
+        while temp.get_left().is_real_node():
+            temp = temp.get_left()
+        return temp
 
     def successor(self):
         if self.right.is_real_node():
@@ -188,15 +193,12 @@ class AVLTree(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, root=None):
         virtualNode = AVLNode(None, -1)
-        self.root = None
+        self.root = root
         self.virtualNode = virtualNode
-
-    def __init__(self, node):
-        virtualNode = AVLNode(None, -1)
-        self.root = node
-        self.virtualNode = virtualNode
+        self.min = None
+        self.max = None
 
     # add your fields here
 
@@ -209,16 +211,17 @@ class AVLTree(object):
     """
 
     def search(self, key):
-        node = self.root
-        if node.is_real_node():
-            def search_rec(node, key):
-                if node.get_key() == key:
-                    return node
-                if node.left.is_real_node() and key > node.left.key():
-                    return search_rec(node.left, key)
-                if node.right.is_real_node() and key < node.right.key():
-                    return search_rec(node.right, key)
-        return None
+        root = self.root
+
+        def search_rec(node, key):
+            if node is None or node.get_key() == key:
+                return node
+            if node.get_right().is_real_node() and node.get_key() < key:
+                return search_rec(node.get_right(), key)
+            if node.get_left().is_real_node():
+                return search_rec(node.get_left(), key)
+
+        return search_rec(root, key)
 
     def updateHeight(self, node):
         left_height = max(node.get_left().get_height(), 0)
@@ -232,7 +235,7 @@ class AVLTree(object):
         return node.get_left() == self.virtualNode and node.get_right() == self.virtualNode
 
     def updateSize(self, node):
-        node.set_size(1 + node.left.size, node.right.size)
+        node.set_size(1 + node.left.size + node.right.size)
 
     """inserts val at position i in the dictionary
 
@@ -245,35 +248,76 @@ class AVLTree(object):
     @returns: the number of rebalancing operation due to AVL rebalancing
     """
 
+    def insert_rec(self, node, key, val, parent):  # regular insert to binary tree
+        if key < node.get_key():
+            if not node.get_left().is_real_node():
+                node.set_left(AVLNode(key, val))
+                node.get_left().set_parent(node)
+                return node.get_left()
+            return self.insert_rec(node.get_left(), key, val, node)
+        elif key > node.get_key():
+            if not node.get_right().is_real_node():
+                node.set_right(AVLNode(key, val))
+                node.get_right().set_parent(node)
+                return node.get_right()
+            return self.insert_rec(node.get_right(), key, val, node)
+
+    def max_insert_temp(self, key, val):
+        suspect = self.max
+        node = AVLNode(key, val)
+        while suspect.is_real_node():
+            if suspect is not self.root and suspect.get_parent().get_right() is suspect:
+                if suspect.get_key() > key:
+                    if suspect.get_parent().get_key() > key:
+                        suspect = suspect.get_parent()
+                    else:
+                        suspect = suspect.get_left()
+                else:
+                    suspect = suspect.get_right()
+            else:
+                if suspect.get_key() > key:
+                    suspect = suspect.get_left()
+                else:
+                    suspect = suspect.get_right()
+
+        node.set_parent(suspect.get_parent())
+
+        if node.get_parent().get_key() == self.root.get_key():
+            if self.root.get_key() < key:
+                self.root.set_right(node)
+            else:
+                self.root.set_left(node)
+        elif node.get_parent().get_key() > key:
+            node.get_parent().set_left(node)
+        else:
+            node.get_parent().set_right(node)
+        return node
+
     def insert(self, key, val):
         root = self.get_root()
         if root is None:
             self.root = AVLNode(key, val)
             self.root.set_left(self.virtualNode)
             self.root.set_right(self.virtualNode)
+            self.root.get_left().set_parent(self.root)
+            self.root.get_right().set_parent(self.root)
             self.updateHeight(self.root)
             self.root.set_size(1)
+            self.min = self.root
+            self.max = self.root
             return 0
         rb_num = 0
-
-        def insert_rec(node, key, val, parent):  # regular insert to binary tree
-            if key < node.get_key():
-                if not node.get_left().is_real_node():
-                    node.set_left(AVLNode(key, val))
-                    node.get_left().set_parent(node)
-                    return node.get_left()
-                return insert_rec(node.get_left(), key, val, node)
-            elif key > node.get_key():
-                if not node.get_right().is_real_node():
-                    node.set_right(AVLNode(key, val))
-                    node.get_right().set_parent(node)
-                    return node.get_right()
-                return insert_rec(node.get_right(), key, val, node)
-
-        y = insert_rec(root, key, val, self.virtualNode)  # get inserted node
+        # y = self.max_insert_temp(key, val)
+        y = self.insert_rec(root, key, val, self.virtualNode)  # get inserted node
         y.set_left(self.virtualNode)
+        #y.get_left().set_parent(y)
         y.set_right(self.virtualNode)
+        #y.get_right().set_parent(y)
         self.updateHeight(y)
+        if y.get_key() < self.min.get_key():
+            self.min = y
+        if y.get_key() > self.max.get_key():
+            self.max = y
         y = y.get_parent()
         while y:  # check if we the node is not null (happens after we get the parent of the root)
             self.updateSize(y)
@@ -444,6 +488,7 @@ class AVLTree(object):
             y.size -= 1
             temp_height = y.get_height()
             self.updateHeight(y)
+            self.updateSize(y)
             balance_factor = self.BFS(y)
             if abs(balance_factor) < 2 and y.get_height() == temp_height:
                 y = y.get_parent()
@@ -463,26 +508,48 @@ class AVLTree(object):
         left = node.get_left()
         right = node.get_right()
 
-        if node.is_leaf():
+        if node.is_leaf():  # if the node is a leaf
             if node is self.root:
                 self.root = None
+                self.min = None
                 return self.root
-            if node.get_parent().get_left() is node:
-                node.get_parent().set_left(self.virtualNode)
+            parent = node.get_parent()
+            if parent.get_key() == self.root.get_key():
+                parent = self.root
+            if node is self.min:
+                self.min = parent
+            if node.get_key() == self.max.get_key():
+                self.max = parent
+            if parent.get_left() is node:
+                parent.set_left(self.virtualNode)
             else:
-                node.get_parent().set_right(self.virtualNode)
-            return node.get_parent()
+                parent.set_right(self.virtualNode)
+            node.set_parent(None)
+            return parent
         elif not left.is_real_node() and right.is_real_node():  # no left child
+            if node is self.min:
+                self.min = right
             node.set_key(right.get_key())
             node.set_value(right.get_value())
+            right.set_parent(None)
             node.set_right(self.virtualNode)
             node.get_right().set_parent(node)
+            if right is self.max:
+                self.max = node
             return node
         elif not right.is_real_node() and left.is_real_node():  # no right child
+            if node is self.max:
+                if node is self.root:
+                    self.max = node.get_left()
+                else:
+                    self.max = node.get_parent()
             node.set_key(left.get_key())
             node.set_value(left.get_value())
+            left.set_parent(None)
             node.set_left(self.virtualNode)
             node.get_left().set_parent(node)
+            if left is self.min:
+                self.min = node
             return node
         else:  # right child and left child exist
             successor = right.min_node()
@@ -490,14 +557,15 @@ class AVLTree(object):
             node.set_key(successor.get_key())
             node.set_value(successor.get_value())
             node.set_right(self.delete_rec(right, successor.get_key()))
+            successor.set_parent(None)
             return successor_parent
 
     def delete_rec(self, node, key):
         if key < node.get_key():
             node.set_left(self.delete_rec(node.get_left(), key))
+            node.get_left().set_parent(node)
         else:
             temp = node.get_right()
-            node = self.virtualNode
             return temp
         return node
 
@@ -654,43 +722,35 @@ class AVLTree(object):
 
     def get_root(self):
         return self.root
-    
-    def max_insert_temp(self, node):
-    suspect = self.max
-    while suspect.is_real_node():
-        if suspect.parent.is_real_node() and suspect.parent.right is suspect:
-            if suspect.key > node.key:
-                if suspect.parent.key > node.key:
-                    suspect = suspect.parent
-                else:
-                    suspect = suspect.left
-            else:
-                suspect = suspect.right
-        else:
-            if suspect.key > node.key:
-                suspect = suspect.left
-            else:
-                suspect = suspect.right
-    node = suspect
-
 
 
 firstTree = AVLTree()
-nums = [15, 8, 22, 20, 4, 11, 24, 2, 9, 12, 18, 13]
+nums = [12, 5, 15, 2, 8, 13, 18, 0, 4, 7, 10, 14, 17, 19, 1, 3, 6, 9, 11, 16]
 for num in nums:
     root = firstTree.insert(num, 1)
 firstTree.display(firstTree.root)
-firstTree.delete(firstTree.root.get_right().get_right())
-'''firstTree.display(firstTree.root)
-firstTree.delete(firstTree.root.get_right())
-firstTree.display(firstTree.root)
 
-firstTree.delete(firstTree.root.get_left())
-firstTree.display(firstTree.root)
-firstTree.delete(firstTree.root.get_left().get_right())
-firstTree.display(firstTree.root)
-firstTree.delete(firstTree.root.get_right())
-firstTree.display(firstTree.root)
 
-#firstTree.delete(firstTree.root)
+deleted_nums = [17,12,10,4,2,15,18,16,3,11,0,14,13,9,1,7,6,5,19,8]
+for num in deleted_nums:
+    node_to_delete = firstTree.search(num)
+    print("deleting", num)
+    firstTree.delete(node_to_delete)
+    if firstTree.root:
+        print("minimum is", firstTree.min.get_key())
+        print("maximum is", firstTree.max.get_key())
+        firstTree.display(firstTree.root)
 '''
+while firstTree.root:
+    random_key = random.choice(nums)
+    node_to_delete = firstTree.search(random_key)
+    print("deleting", random_key)
+    firstTree.delete(node_to_delete)
+    if firstTree.root:
+        print("minimum is", firstTree.min.get_key())
+        print("maximum is", firstTree.max.get_key())
+        firstTree.display(firstTree.root)
+    nums.remove(random_key)
+'''
+# firstTree.delete(firstTree.root.get_right())
+# firstTree.display(firstTree.root)
