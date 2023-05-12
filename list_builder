@@ -1,4 +1,7 @@
 import random
+@ creates lists that fit the description of question 1 in the theoretical part.
+@ pre: i is a positive integer (the function can handle cases where i > 5 although the question restricts i to be lesser than 5).
+@ list types are reverse, shuffle and almost. for any other type the output is None.
 def list_builder(i, lst_type):
     n = pow(2,i)*1500
     return_lst = []
