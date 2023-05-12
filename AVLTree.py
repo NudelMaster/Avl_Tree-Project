@@ -162,10 +162,10 @@ class AVLNode(object):
         return self.height > -1
 
     def min_node(self):
-    while self.left.is_real_node():
-        self = self.get_left()
-    return self
-   
+        while self.left.is_real_node():
+            self = self.get_left()
+        return self
+
     def successor(self):
         if self.right.is_real_node():
             return self.right.min_node()
@@ -192,7 +192,7 @@ class AVLTree(object):
         virtualNode = AVLNode(None, -1)
         self.root = None
         self.virtualNode = virtualNode
-        
+
     def __init__(self, node):
         virtualNode = AVLNode(None, -1)
         self.root = node
@@ -209,7 +209,7 @@ class AVLTree(object):
     """
 
     def search(self, key):
-        node = self.get_root()
+        node = self.root
         if node.is_real_node():
             def search_rec(node, key):
                 if node.get_key() == key:
@@ -434,9 +434,10 @@ class AVLTree(object):
     @returns: the number of rebalancing operation due to AVL rebalancing
     """
 
-       def delete(self, node):
-        y = self.BTS_delete(node) # get parent of node that was deleted, if we delete root we get the node of the previous parent of the new root
-        if y is None: # if we get an empty tree, after deleting the root of size 1
+    def delete(self, node):
+        y = self.BTS_delete(
+            node)  # get parent of node that was deleted, if we delete root we get the node of the previous parent of the new root
+        if y is None:  # if we get an empty tree, after deleting the root of size 1
             return 0
         rb_num = 0
         while y:
@@ -483,14 +484,13 @@ class AVLTree(object):
             node.set_left(self.virtualNode)
             node.get_left().set_parent(node)
             return node
-        else: # right child and left child exist
+        else:  # right child and left child exist
             successor = right.min_node()
             successor_parent = successor.get_parent()
             node.set_key(successor.get_key())
             node.set_value(successor.get_value())
             node.set_right(self.delete_rec(right, successor.get_key()))
             return successor_parent
-
 
     def delete_rec(self, node, key):
         if key < node.get_key():
@@ -513,6 +513,7 @@ class AVLTree(object):
                 avl_to_array_rec(array, node.left)
                 array.append(node)
                 avl_to_array_rec(array, node.right)
+
         ret_list = []
         avl_to_array_rec(ret_list, self.root)
         return ret_list
@@ -524,7 +525,7 @@ class AVLTree(object):
     """
 
     def size(self):
-        return self.get_root().get_size()
+        return self.root().get_size()
 
     """splits the dictionary at a given node
 
@@ -550,8 +551,6 @@ class AVLTree(object):
             father = node.parent
         return left, right
 
-        
-
     """joins self with key and another AVLTree
 
     @type tree: AVLTree 
@@ -567,13 +566,14 @@ class AVLTree(object):
     """
 
     def join(self, tree, key, val):
-            def join(self, tree, key, val):
-        retval = abs(self.root.hight - tree.root.hight) + 1
-        if self.get_root().get_key < key:
-            self.rec_join(tree, key, val)
-        else:
-            tree.rec_join(self, key, val)
-        return retval
+        def join(self, tree, key, val):
+
+            retval = abs(self.root.hight - tree.root.hight) + 1
+            if self.get_root().get_key < key:
+                self.rec_join(tree, key, val)
+            else:
+                tree.rec_join(self, key, val)
+            return retval
 
     def UnbalancedJoin(self, tree, key, val):
         node = AVLNode(key, val)
@@ -584,19 +584,19 @@ class AVLTree(object):
         return node
 
     def rec_join(self, big, key, val):
-        if abs(self.get_root().get_hight() - big.get_root().get_hight()) <= 1:
+        if abs(self.root.get_hight() - big.get_root().get_hight()) <= 1:
             new_root = self.UnbalancedJoin(big, key, val)
-            new_root.set_hight(max(self.get_root().get_hight(), big.get_root().get_hight()) + 1)
+            new_root.set_height(max(self.root.get_hight(), big.get_root().get_hight()) + 1)
             self.root = new_root
         elif self.root.hight > big.root.hight:
-            new_root = AVLTree(self.get_root().get_right()).rec_join(big, key, val)
-            self.set_right(new_root)
-            new_root.set_parent(self.get_root())
+            new_root = AVLTree(self.root.get_right()).rec_join(big, key, val)
+            self.root.set_right(new_root)
+            new_root.set_parent(self.root)
             self.root = self.Balance(new_root)
         else:
-            new_root = AVLTree(self.get_root().get_left()).rec_join(big, key, val)
-            self.set_left(new_root)
-            new_root.set_parent(self.get_root())
+            new_root = AVLTree(self.root.get_left()).rec_join(big, key, val)
+            self.root.set_left(new_root)
+            new_root.set_parent(self.root)
             self.root = self.Balance(new_root)
         return self.root
 
@@ -611,7 +611,7 @@ class AVLTree(object):
         return true_root
 
     """compute the rank of node in the self
-
+    
     @type node: AVLNode
     @pre: node is in self
     @param node: a node in the dictionary which we want to compute its rank
@@ -629,7 +629,7 @@ class AVLTree(object):
         return r
 
     """finds the i'th smallest item (according to keys) in self
-
+    
     @type i: int
     @pre: 1 <= i <= self.size()
     @param i: the rank to be selected in self
@@ -647,7 +647,7 @@ class AVLTree(object):
             return self.select(node, i - r)
 
     """returns the root of the tree representing the dictionary
-
+    
     @rtype: AVLNode
     @returns: the root, None if the dictionary is empty
     """
