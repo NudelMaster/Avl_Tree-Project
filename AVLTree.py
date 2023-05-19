@@ -171,15 +171,10 @@ class AVLNode(object):
             temp = temp.get_left()
         return temp
 
-    def successor(self):
+    def in_order_successor(self):
         if self.right.is_real_node():
             return self.right.min_node()
-        temp = self.parent
-        while temp and self == temp.right:
-            self = temp
-            temp = self.parent
-
-        return temp
+        
 
 
 """
@@ -479,96 +474,86 @@ class AVLTree(object):
     """
 
     def delete(self, node):
-        y = self.BTS_delete(
-            node)  # get parent of node that was deleted, if we delete root we get the node of the previous parent of the new root
-        if y is None:  # if we get an empty tree, after deleting the root of size 1
-            return 0
-        rb_num = 0
-        while y:
-            y.size -= 1
-            temp_height = y.get_height()
-            self.updateHeight(y)
-            self.updateSize(y)
-            balance_factor = self.BFS(y)
-            if abs(balance_factor) < 2 and y.get_height() == temp_height:
-                y = y.get_parent()
-            elif abs(balance_factor) < 2 and y.get_height() != temp_height:
-                y = y.get_parent()
-                rb_num += 1
-            elif abs(balance_factor) >= 2:
-                print("\n Before rotate")
-                self.display(self.root)
-                y, rb_num = self.rotate(y, balance_factor)
-                y = y.get_parent()
-                print("\n After rotate")
-                self.display(self.root)
-        return rb_num
-
-    def BTS_delete(self, node):
-        left = node.get_left()
-        right = node.get_right()
-
-        if node.is_leaf():  # if the node is a leaf
-            if node is self.root:
-                self.root = None
-                self.min = None
-                return self.root
-            parent = node.get_parent()
-            if parent.get_key() == self.root.get_key():
-                parent = self.root
-            if node is self.min:
-                self.min = parent
-            if node.get_key() == self.max.get_key():
-                self.max = parent
-            if parent.get_left() is node:
-                parent.set_left(self.virtualNode)
-            else:
-                parent.set_right(self.virtualNode)
-            node.set_parent(None)
-            return parent
-        elif not left.is_real_node() and right.is_real_node():  # no left child
-            if node is self.min:
-                self.min = right
-            node.set_key(right.get_key())
-            node.set_value(right.get_value())
-            right.set_parent(None)
-            node.set_right(self.virtualNode)
-            node.get_right().set_parent(node)
-            if right is self.max:
-                self.max = node
-            return node
-        elif not right.is_real_node() and left.is_real_node():  # no right child
-            if node is self.max:
-                if node is self.root:
-                    self.max = node.get_left()
-                else:
-                    self.max = node.get_parent()
-            node.set_key(left.get_key())
-            node.set_value(left.get_value())
-            left.set_parent(None)
-            node.set_left(self.virtualNode)
-            node.get_left().set_parent(node)
-            if left is self.min:
-                self.min = node
-            return node
-        else:  # right child and left child exist
-            successor = right.min_node()
-            successor_parent = successor.get_parent()
-            node.set_key(successor.get_key())
-            node.set_value(successor.get_value())
-            node.set_right(self.delete_rec(right, successor.get_key()))
-            successor.set_parent(None)
-            return successor_parent
-
-    def delete_rec(self, node, key):
-        if key < node.get_key():
-            node.set_left(self.delete_rec(node.get_left(), key))
-            node.get_left().set_parent(node)
+    left = node.get_left()
+    right = node.get_right()
+    if node.is_leaf():
+        y = node.get_parent()
+    elif not right.is_real_node(): # no right subtree
+        y = left
+    else:
+        successor = node.in_order_successor()
+        successor_parent = successor.get_parent()
+        if successor_parent is node:
+            y = successor
         else:
-            temp = node.get_right()
-            return temp
+            y = successor_parent
+
+    self.root = self.BTS_delete(self.root, node.get_key()) # Regular deletion from BST
+    if self.root is None:  # if we get an empty tree, after deleting the root of size 1
+        return 0
+    rb_num = 0
+    while y:
+        y.size -= 1
+        temp_height = y.get_height()
+        self.updateHeight(y)
+        self.updateSize(y)
+        balance_factor = self.BFS(y)
+        if abs(balance_factor) < 2 and y.get_height() == temp_height:
+            y = y.get_parent()
+        elif abs(balance_factor) < 2 and y.get_height() != temp_height:
+            y = y.get_parent()
+            rb_num += 1
+        elif abs(balance_factor) >= 2:
+            print("\n Before rotate")
+            self.display(self.root)
+            y, rb_num = self.rotate(y, balance_factor)
+            y = y.get_parent()
+            print("\n After rotate")
+            self.display(self.root)
+    return rb_num
+
+def BTS_delete(self, node, key): # recursive method to delete node with given key
+
+    if not node.is_real_node():
+        return node
+    if key < node.get_key():
+        node.set_left(self.BTS_delete(node.get_left(), key))
+        node.get_left().set_parent(node)
+        return node
+    elif key > node.get_key():
+        node.set_right(self.BTS_delete(node.get_right(), key))
+        node.get_right().set_parent(node)
         return node
 
+    # After reaching the node starting the deletion
+
+    if node.is_leaf():
+        return AVLNode(None, -1)
+
+    if not node.get_left().is_real_node():
+        temp = node.get_right()
+        node = AVLNode(None, -1)
+        return temp
+    elif not node.get_right().is_real_node():
+        temp = node.get_left()
+        node = AVLNode(None, -1)
+        return temp
+
+    successor = node.in_order_successor()
+    successor_parent = successor.get_parent()
+
+
+    if successor_parent is not node:
+        successor_parent.set_left(successor.get_right())
+        successor_parent.get_left().set_parent(successor_parent)
+    else:
+        successor_parent.set_right(successor.get_right())
+        successor_parent.get_right().set_parent(successor_parent)
+
+    node.set_key(successor.get_key())
+    node.set_value(successor.set_value(successor.get_value()))
+
+    return node
     """returns an array representing dictionary 
 
     @rtype: list
