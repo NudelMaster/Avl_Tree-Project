@@ -153,17 +153,29 @@ class AVLNode(object):
     def set_size(self, s):
         self.size = s
 
+    """returns whether self is leaf or not
+    
+    @rtype: bool
+    @returns: True if self is a leaf, False otherwise
+    """
+
+    def is_leaf(self):
+        return not self.left.is_real_node() and not self.right.is_real_node()
+
     """returns whether self is not a virtual node 
 
     @rtype: bool
     @returns: False if self is a virtual node, True otherwise.
     """
 
-    def is_leaf(self):
-        return not self.left.is_real_node() and not self.right.is_real_node()
-
     def is_real_node(self):
         return self.height > -1
+
+    """returns the minimum node from the given node in the tree
+    
+    @rtype: AVLNode
+    @returns: A node in the subtree with the minimum key
+    """
 
     def min_node(self):
         temp = self
@@ -171,10 +183,39 @@ class AVLNode(object):
             temp = temp.get_left()
         return temp
 
+    """returns the successor in an in-order method
+    
+    @rtype: AVLNode
+    @returns: in order successor node
+    """
+
     def in_order_successor(self):
         if self.right.is_real_node():
             return self.right.min_node()
-        
+        else:
+            return self
+
+    """Overwrites the previous height of the node with the current height
+    
+    @pre: self is AVLNode
+    """
+
+    def updateHeight(self):
+        left_height = max(self.get_left().get_height(), 0)
+        right_height = max(self.get_right().get_height(), 0)
+        if self.is_leaf():
+            self.set_height(0)
+        else:
+            self.set_height(1 + max(left_height, right_height))
+
+    """Overwrites the previous size of the node with the current size
+    
+    @pre: self is AVLNode
+    """
+
+    def updateSize(self):
+        self.set_size(1 + self.left.size + self.right.size)
+
 
 
 """
@@ -218,30 +259,18 @@ class AVLTree(object):
 
         return search_rec(root, key)
 
-    def updateHeight(self, node):
-        left_height = max(node.get_left().get_height(), 0)
-        right_height = max(node.get_right().get_height(), 0)
-        if self.is_leaf(node):
-            node.set_height(0)
-        else:
-            node.set_height(1 + max(left_height, right_height))
-
-    def is_leaf(self, node):
-        return node.get_left() == self.virtualNode and node.get_right() == self.virtualNode
-
-    def updateSize(self, node):
-        node.set_size(1 + node.left.size + node.right.size)
-
-    """inserts val at position i in the dictionary
-
+    """inserts recursively val to position i in the dictionary
+    
+    @type node: AVLNode
+    @param node: AVLNode to be inserted to self
     @type key: int
     @pre: key currently does not appear in the dictionary
     @param key: key of item that is to be inserted to self
     @type val: any
     @param val: the value of the item
-    @rtype: int
-    @returns: the number of rebalancing operation due to AVL rebalancing
+    @rtype: AVLNode
     """
+
 
     def insert_rec(self, node, key, val, parent):  # regular insert to binary tree
         if key < node.get_key():
@@ -257,67 +286,76 @@ class AVLTree(object):
                 return node.get_right()
             return self.insert_rec(node.get_right(), key, val, node)
 
-    def max_insert_temp(self, key, val):
-        suspect = self.max
-        node = AVLNode(key, val)
-        while suspect.is_real_node():
-            if suspect is not self.root and suspect.get_parent().get_right() is suspect:
-                if suspect.get_key() > key:
-                    if suspect.get_parent().get_key() > key:
-                        suspect = suspect.get_parent()
-                    else:
-                        suspect = suspect.get_left()
-                else:
-                    suspect = suspect.get_right()
-            else:
-                if suspect.get_key() > key:
-                    suspect = suspect.get_left()
-                else:
-                    suspect = suspect.get_right()
+#     def max_insert_temp(self, key, val):
+#         suspect = self.max
+#         node = AVLNode(key, val)
+#         while suspect.is_real_node():
+#             if suspect is not self.root and suspect.get_parent().get_right() is suspect:
+#                 if suspect.get_key() > key:
+#                     if suspect.get_parent().get_key() > key:
+#                         suspect = suspect.get_parent()
+#                     else:
+#                         suspect = suspect.get_left()
+#                 else:
+#                     suspect = suspect.get_right()
+#             else:
+#                 if suspect.get_key() > key:
+#                     suspect = suspect.get_left()
+#                 else:
+#                     suspect = suspect.get_right()
 
-        node.set_parent(suspect.get_parent())
+#         node.set_parent(suspect.get_parent())
 
-        if node.get_parent().get_key() == self.root.get_key():
-            if self.root.get_key() < key:
-                self.root.set_right(node)
-            else:
-                self.root.set_left(node)
-        elif node.get_parent().get_key() > key:
-            node.get_parent().set_left(node)
-        else:
-            node.get_parent().set_right(node)
-        return node
+#         if node.get_parent().get_key() == self.root.get_key():
+#             if self.root.get_key() < key:
+#                 self.root.set_right(node)
+#             else:
+#                 self.root.set_left(node)
+#         elif node.get_parent().get_key() > key:
+#             node.get_parent().set_left(node)
+#         else:
+#             node.get_parent().set_right(node)
+#         return node
+
+
+"""inserts val at position i in the dictionary
+
+@type key: int
+@pre: key currently does not appear in the dictionary
+@param key: key of item that is to be inserted to self
+@type val: any
+@param val: the value of the item
+@rtype: int
+@returns: the number of rebalancing operation due to AVL rebalancing
+"""
 
     def insert(self, key, val):
         root = self.get_root()
         if root is None:
             self.root = AVLNode(key, val)
-            self.root.set_left(self.virtualNode)
-            self.root.set_right(self.virtualNode)
+            self.root.set_left(AVLNode(None, -1))
+            self.root.set_right(AVLNode(None, -1))
             self.root.get_left().set_parent(self.root)
             self.root.get_right().set_parent(self.root)
-            self.updateHeight(self.root)
+            self.root.updateHeight()
             self.root.set_size(1)
             self.min = self.root
             self.max = self.root
             return 0
         rb_num = 0
-        # y = self.max_insert_temp(key, val)
-        y = self.insert_rec(root, key, val, self.virtualNode)  # get inserted node
-        y.set_left(self.virtualNode)
-        #y.get_left().set_parent(y)
-        y.set_right(self.virtualNode)
-        #y.get_right().set_parent(y)
-        self.updateHeight(y)
+        y = self.insert_rec(root, key, val)  # get inserted node
+        y.set_left(AVLNode(None, -1))
+        y.set_right(AVLNode(None, -1))
+        y.updateHeight()
         if y.get_key() < self.min.get_key():
             self.min = y
         if y.get_key() > self.max.get_key():
             self.max = y
         y = y.get_parent()
         while y:  # check if we the node is not null (happens after we get the parent of the root)
-            self.updateSize(y)
+            y.updateSize()
             temp_height = y.get_height()
-            self.updateHeight(y)
+            y.updateHeight()
             balance_factor = self.BFS(y)
             if abs(balance_factor) < 2 and y.get_height() == temp_height:
                 y = y.get_parent()
@@ -332,45 +370,28 @@ class AVLTree(object):
                 print("\n After rotate")
                 self.display(self.root)
         return rb_num
-
-    def left_rotate(self, node):
-        B = node
-        A = B.get_right()
-        B.set_right(A.get_left())
-        B.get_right().set_parent(B)
-        A.set_left(B)
-        self.fix_parent(A, B)
-        self.updateHeight(B)
-        self.updateHeight(A)
-        self.updateSize(B)
-        self.updateSize(A)
-        return A
-
-    def right_rotate(self, node):
-        B = node
-        A = B.get_left()
-        B.set_left(A.get_right())
-        B.get_left().set_parent(B)
-        A.set_right(B)
-        self.fix_parent(A, B)
-        self.updateHeight(B)
-        self.updateHeight(A)
-        self.updateSize(B)
-        self.updateSize(A)
-        return A
-
-    def fix_parent(self, A, B):
-        A.set_parent(B.get_parent())
-        if B == self.root:
-            self.root = A
-        elif B.get_parent().get_left().get_key() == B.get_key():
-            A.get_parent().set_left(A)
-        else:
-            A.get_parent().set_right(A)
-        B.set_parent(A)
+    
+"""Calculates the balance factor of a node in the tree
+    @type node: AVLNode
+    @pre: node is not virtual
+    @param node: node to calculate it's balance factor
+    @rtype: int
+    @returns: the balance factor of the given node
+    """
 
     def BFS(self, node):
         return node.get_left().height - node.get_right().height
+
+    """returns a tuple representing the rotation number and the rotated node after performing right or left or both rotations according to the balance factor
+    @type node: AVLNode
+    @pre: node is not virtual
+    @param node: node that has it's BFS calculated and needs to be rotated
+    @type BFS: int
+    @pre: -2<= BFS <= 2
+    @param node: the balance factor value according to the node that has already been calculated
+    @rtype: tuple
+    @returns: the node that has been rotated and the number of rotations
+    """
 
     def rotate(self, node, BFS):
         rb_count = 0
@@ -391,8 +412,110 @@ class AVLTree(object):
                 rb_count += 1
         return node, rb_count
 
-        # Print the tree
+    """Performs a left rotation to the given node from the tree
+    @type node: AVLNode
+    @pre: node is not virtual
+    @param node: node to be rotated to the left
+    @rtype: AVLNode
+    @returns: The right node of the given node that is being rotated to the left
+    """
 
+    def left_rotate(self, node):
+        B = node
+        A = B.get_right()
+        B.set_right(A.get_left())
+        B.get_right().set_parent(B)
+        A.set_left(B)
+        self.fix_parent(A, B)
+        B.updateHeight()
+        A.updateHeight()
+        B.updateSize()
+        A.updateSize()
+        return A
+
+    """Performs a right rotation to the given node from the tree
+    
+    @type node: AVLNode
+    @pre: node is not virtual
+    @param node: node to be rotated to the right
+    @rtype: AVLNode
+    @returns: The left node of the given node that is being rotated to the right
+    """
+
+    def right_rotate(self, node):
+        B = node
+        A = B.get_left()
+        B.set_left(A.get_right())
+        B.get_left().set_parent(B)
+        A.set_right(B)
+        self.fix_parent(A, B)
+        B.updateHeight()
+        A.updateHeight()
+        B.updateSize()
+        A.updateSize()
+        return A
+
+    """Performs left then right rotation to the given node from the tree
+    
+    @type node: AVLNode
+    @pre: node is not virtual
+    @param node: node to be rotated to the left and then to the right
+    @rtype: AVLNode
+    @returns: the current subtree from the given node after being rotated
+    """
+
+    def left_then_right(self, node):
+        node = self.left_rotate(node)
+        print("first rotate \n")
+        self.display(self.root)
+        node = self.right_rotate(node.get_parent())
+        print("second rotate \n")
+        self.display(self.root)
+        return node
+
+    """Performs right then left rotation to the given node from the tree
+
+    @type node: AVLNode
+    @pre: node is not virtual
+    @param node: node to be rotated to the right and then to the left
+    @rtype: AVLNode
+    @returns: the current subtree from the given node after being rotated
+    """
+
+    def right_then_left(self, node):
+        node = self.right_rotate(node)
+        print("first rotate")
+        self.display(self.root)
+        node = self.left_rotate(node.get_parent())
+        print("second rotate")
+        self.display(self.root)
+        return node
+
+    """Fixes references to the parents of the nodes after rotation
+    @type node: AVLNode
+    @pre: node is not virtual
+    @param node: node that it's current parent is not updated after rotation
+    @type node: AVLNode
+    @pre: node is not virtual
+    @param node: node that it's current parent is not updated after rotation
+    """
+
+    def fix_parent(self, A, B):
+        A.set_parent(B.get_parent())
+        if B == self.root:
+            self.root = A
+        elif B.get_parent().get_left().get_key() == B.get_key():
+            A.get_parent().set_left(A)
+        else:
+            A.get_parent().set_right(A)
+        B.set_parent(A)
+
+
+        
+        
+     # printing tree function #   
+        
+        
     def display(self, root):
         lines, *_ = self._display_aux(root)
         for line in lines:
@@ -447,23 +570,6 @@ class AVLTree(object):
         lines = [first_line, second_line] + [a + u * ' ' + b for a, b in zipped_lines]
         return lines, n + m + u, max(p, q) + 2, n + u // 2
 
-    def left_then_right(self, node):
-        node = self.left_rotate(node)
-        print("first rotate \n")
-        self.display(self.root)
-        node = self.right_rotate(node.get_parent())
-        print("second rotate \n")
-        self.display(self.root)
-        return node
-
-    def right_then_left(self, node):
-        node = self.right_rotate(node)
-        print("first rotate")
-        self.display(self.root)
-        node = self.left_rotate(node.get_parent())
-        print("second rotate")
-        self.display(self.root)
-        return node
 
     """deletes node from the dictionary
 
@@ -473,30 +579,30 @@ class AVLTree(object):
     @returns: the number of rebalancing operation due to AVL rebalancing
     """
 
-    def delete(self, node):
+   def delete(self, node):
     left = node.get_left()
     right = node.get_right()
     if node.is_leaf():
         y = node.get_parent()
-    elif not right.is_real_node(): # no right subtree
-        y = left
+    elif not right.is_real_node():  # only left subtree exists
+        y = left  # left becomes the parent of the deleted node
     else:
-        successor = node.in_order_successor()
+        successor = node.in_order_successor()  # get successor (go all left from right subtree)
         successor_parent = successor.get_parent()
         if successor_parent is node:
             y = successor
         else:
             y = successor_parent
-
-    self.root = self.BTS_delete(self.root, node.get_key()) # Regular deletion from BST
-    if self.root is None:  # if we get an empty tree, after deleting the root of size 1
+    self.root = self.BTS_delete(self.root, node.get_key())  # Regular deletion from BST
+    if not self.root.is_real_node():  # if we get an empty tree, after deleting the root of size 1
+        self.root = None
         return 0
     rb_num = 0
     while y:
         y.size -= 1
         temp_height = y.get_height()
-        self.updateHeight(y)
-        self.updateSize(y)
+        y.updateHeight()
+        y.updateSize()
         balance_factor = self.BFS(y)
         if abs(balance_factor) < 2 and y.get_height() == temp_height:
             y = y.get_parent()
@@ -512,6 +618,18 @@ class AVLTree(object):
             self.display(self.root)
     return rb_num
 
+
+"""Performs a regular deletion in a binary search tree
+@type node: AVLNode
+@pre: node exists in self
+@param node: root of the tree that needs the node with the given key to be deleted 
+@type key: int
+@pre: key is not None
+@param key: the key of the node to be deleted from the tree
+@rtype: AVLNode
+@returns: the root of the tree after the deletion of the node with the given key
+"""
+
 def BTS_delete(self, node, key): # recursive method to delete node with given key
 
     if not node.is_real_node():
@@ -526,7 +644,7 @@ def BTS_delete(self, node, key): # recursive method to delete node with given ke
         return node
 
     # After reaching the node starting the deletion
-
+    
     if node.is_leaf():
         return AVLNode(None, -1)
 
@@ -542,7 +660,6 @@ def BTS_delete(self, node, key): # recursive method to delete node with given ke
     successor = node.in_order_successor()
     successor_parent = successor.get_parent()
 
-
     if successor_parent is not node:
         successor_parent.set_left(successor.get_right())
         successor_parent.get_left().set_parent(successor_parent)
@@ -554,6 +671,8 @@ def BTS_delete(self, node, key): # recursive method to delete node with given ke
     node.set_value(successor.set_value(successor.get_value()))
 
     return node
+   
+    
     """returns an array representing dictionary 
 
     @rtype: list
