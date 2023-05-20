@@ -272,19 +272,19 @@ class AVLTree(object):
     """
     # Complexity O(log(n)), regular insertion to binary tree with known complexity
 
-    def insert_rec(self, node, key, val, parent):  # regular insert to binary tree
+    def insert_rec(self, node, key, val):  # regular insert to binary tree
         if key < node.get_key():
             if not node.get_left().is_real_node():
                 node.set_left(AVLNode(key, val))
                 node.get_left().set_parent(node)
                 return node.get_left()
-            return self.insert_rec(node.get_left(), key, val, node)
+            return self.insert_rec(node.get_left(), key, val)
         elif key > node.get_key():
             if not node.get_right().is_real_node():
                 node.set_right(AVLNode(key, val))
                 node.get_right().set_parent(node)
                 return node.get_right()
-            return self.insert_rec(node.get_right(), key, val, node)
+            return self.insert_rec(node.get_right(), key, val)
 
 #     def max_insert_temp(self, key, val):
 #         suspect = self.max
@@ -352,10 +352,7 @@ class AVLTree(object):
         y.set_left(AVLNode(None, -1))
         y.set_right(AVLNode(None, -1))
         y.updateHeight()
-        if y.get_key() < self.min.get_key():
-            self.min = y
-        if y.get_key() > self.max.get_key():
-            self.max = y
+        y.updateSize()
         y = y.get_parent()
         while y:  # check if we the node is not null (happens after we get the parent of the root)
             y.updateSize()
