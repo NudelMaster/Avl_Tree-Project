@@ -176,7 +176,7 @@ class AVLNode(object):
     @rtype: AVLNode
     @returns: A node in the subtree with the minimum key
     """
-
+    # Complexity O(log(n)), there are at most h iterations, with h representing the height of the tree
     def min_node(self):
         temp = self
         while temp.get_left().is_real_node():
@@ -188,7 +188,7 @@ class AVLNode(object):
     @rtype: AVLNode
     @returns: in order successor node
     """
-
+    # Complexity O(log(n)), the method calls min_node method.
     def in_order_successor(self):
         if self.right.is_real_node():
             return self.right.min_node()
@@ -245,7 +245,7 @@ class AVLTree(object):
     @rtype: any
     @returns: the value corresponding to key.
     """
-
+    # Complexity O(log(n)), regular search in binary tree with known complexity
     def search(self, key):
         root = self.root
 
@@ -270,7 +270,7 @@ class AVLTree(object):
     @param val: the value of the item
     @rtype: AVLNode
     """
-
+    # Complexity O(log(n)), regular insertion to binary tree with known complexity
 
     def insert_rec(self, node, key, val, parent):  # regular insert to binary tree
         if key < node.get_key():
@@ -318,17 +318,22 @@ class AVLTree(object):
 #         return node
 
 
-"""inserts val at position i in the dictionary
+    """inserts val at position i in the dictionary
 
-@type key: int
-@pre: key currently does not appear in the dictionary
-@param key: key of item that is to be inserted to self
-@type val: any
-@param val: the value of the item
-@rtype: int
-@returns: the number of rebalancing operation due to AVL rebalancing
-"""
-
+    @type key: int
+    @pre: key currently does not appear in the dictionary
+    @param key: key of item that is to be inserted to self
+    @type val: any
+    @param val: the value of the item
+    @rtype: int
+    @returns: the number of rebalancing operation due to AVL rebalancing
+    """
+    
+    """ Complexity O(log(n)), this method calls insertion method that has been mentioned before,
+    and uses while loop to traverse from inserted node up to the root that does at most h iterations, as we have mentioned before h stands for height of the tree
+    in total we have at most O(log(n))
+    """
+    
     def insert(self, key, val):
         root = self.get_root()
         if root is None:
@@ -371,13 +376,15 @@ class AVLTree(object):
                 self.display(self.root)
         return rb_num
     
-"""Calculates the balance factor of a node in the tree
+    """Calculates the balance factor of a node in the tree
     @type node: AVLNode
     @pre: node is not virtual
     @param node: node to calculate it's balance factor
     @rtype: int
     @returns: the balance factor of the given node
     """
+    
+   
 
     def BFS(self, node):
         return node.get_left().height - node.get_right().height
@@ -578,7 +585,14 @@ class AVLTree(object):
     @rtype: int
     @returns: the number of rebalancing operation due to AVL rebalancing
     """
-
+    
+    """
+    Complexity: O(log(n))
+    This method calls to BST_delete, which is a regular deletion in binary search tree with complexity of O(log(n)),
+    after deleting the node from the tree we traverse using a while loop from the parent of the physically deleted node up to the root doing constant time in each iteration
+    in total we get O(log(n))
+    """
+    
    def delete(self, node):
     left = node.get_left()
     right = node.get_right()
@@ -630,6 +644,12 @@ class AVLTree(object):
 @returns: the root of the tree after the deletion of the node with the given key
 """
 
+"""
+Complexity: O(log(n))
+This is a regular deletion from a binary search tree with known complexity of O(h), h stands for the height of the tree,
+which has been proved to be O(log(n))
+"""
+
 def BTS_delete(self, node, key): # recursive method to delete node with given key
 
     if not node.is_real_node():
@@ -678,7 +698,10 @@ def BTS_delete(self, node, key): # recursive method to delete node with given ke
     @rtype: list
     @returns: a sorted list according to key of touples (key, value) representing the data structure
     """
-
+    """
+    Complexity: O(n)
+    This method traverses in an in-order method, reaching all nodes in the tree, so in total we get O(n) elements to insert.
+    """
     def avl_to_array(self):
         def avl_to_array_rec(array, node):
             if node.is_real_node:
@@ -709,7 +732,12 @@ def BTS_delete(self, node, key): # recursive method to delete node with given ke
     dictionary smaller than node.key, right is an AVLTree representing the keys in the 
     dictionary larger than node.key.
     """
-
+    
+    """
+    Complexity: O(log(n))
+    This method works like we saw in class, and we have proved it's complexity is O(log(n)
+    """
+    
     def split(self, node):
         left = AVLTree(node.left)
         right = AVLTree(node.right)
@@ -735,6 +763,11 @@ def BTS_delete(self, node, key): # recursive method to delete node with given ke
     or the other way around.
     @rtype: int
     @returns: the absolute value of the difference between the height of the AVL trees joined
+    """
+    
+     """
+    Complexity: O(log(n))
+    This method works like we saw in class, and we have proved it's complexity is O(log(n)
     """
 
     def join(self, tree, key, val):
