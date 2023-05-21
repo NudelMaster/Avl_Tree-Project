@@ -27,6 +27,7 @@ class AVLNode(object):
         self.parent = None
         self.height = -1
         self.size = 0
+        self.rank = 0
 
     """returns the key
 
@@ -89,6 +90,12 @@ class AVLNode(object):
 
     def get_size(self):
         return self.size
+
+    def get_rank(self):
+        return self.rank
+
+    def set_rank(self, rank):
+        self.rank = rank
 
     """sets key
 
@@ -278,6 +285,7 @@ class AVLTree(object):
 
     def insert_rec(self, node, key, val):  # regular insert to binary tree
         if key < node.get_key():
+            node.set_rank(node.get_rank() + 1)
             if not node.get_left().is_real_node():
                 node.set_left(AVLNode(key, val))
                 node.get_left().set_parent(node)
@@ -301,19 +309,18 @@ class AVLTree(object):
     @returns: the number of rebalancing operation due to AVL rebalancing
     """
 
-
     def update_max(self):
         self.max = self.root.max_node()
 
     def max_insert_rec(self, node, key, val):
         if key < node.get_key():
             if node is self.root:  # if we have reached root
-                return self.insert_rec(node, key, val) # regular recursive insertion
+                return self.insert_rec(node, key, val)  # regular recursive insertion
             elif node.get_parent().get_right() is not node:  # if we are in the left subtree
                 return self.insert_rec(node, key, val)
             elif key < node.get_parent().get_key():  # if we are in right subtree and parent's key is bigger then key
                 return self.max_insert_rec(node.get_parent(), key, val)
-            else: # if key is bigger than parent
+            else:  # if key is bigger than parent
                 return self.insert_rec(node, key, val)
         else:  # key > node.key e
             return self.insert_rec(node, key, val)
@@ -330,7 +337,7 @@ class AVLTree(object):
             self.root.updateHeight()
             self.root.set_size(1)
             self.max = self.root
-            return 0, 0, 1
+            return 0, 0, 0
         rb_num = 0
         y = self.max_insert_rec(self.max, key, val)  # get inserted node
         y.set_left(AVLNode(None, -1))
@@ -353,8 +360,8 @@ class AVLTree(object):
                 y = y.get_parent()
                 rb_num += 1
             elif abs(balance_factor) == 2:
-                print("\n Before rotate")
-                self.display(self.root)
+                # print("\n Before rotate")
+                # self.display(self.root)
                 y, rb_num = self.rotate(y, balance_factor)
                 y = y.get_parent()
         counter = self.search_from_max(temp, key)
@@ -365,14 +372,14 @@ class AVLTree(object):
         global counter
         if key < node.get_key():
             if node is self.root:  # if we have reached root
-                return self.search_rec_max(node, key) # regular recursive insertion
+                return self.search_rec_max(node, key)  # regular recursive insertion
             elif node.get_parent().get_right() is not node:  # if we are in the left subtree
                 return self.search_rec_max(node, key)
             elif key < node.get_parent().get_key():  # if we are in right subtree and parent's key is bigger then key
-                counter+=1
+                counter += 1
                 return self.search_from_max(node.get_parent(), key)
-            elif key == node.get_parent().get_key(): # parent is the inserted node
-                counter+=1
+            elif key == node.get_parent().get_key():  # parent is the inserted node
+                counter += 1
                 return counter
             else:
                 return self.search_rec_max(node, key)
@@ -384,12 +391,11 @@ class AVLTree(object):
         if node.get_key() == key:
             return counter
         if node.get_right().is_real_node() and node.get_key() < key:
-            counter+=1
+            counter += 1
             return self.search_rec_max(node.get_right(), key)
         elif node.get_left().is_real_node():
-            counter+=1
+            counter += 1
             return self.search_rec_max(node.get_left(), key)
-
 
     """Calculates the balance factor of a node in the tree
     @type node: AVLNode
@@ -451,8 +457,8 @@ class AVLTree(object):
         A.updateHeight()
         B.updateSize()
         A.updateSize()
-        print("\n left rotate")
-        self.display(self.root)
+        # print("\n left rotate")
+        # self.display(self.root)
         return A
 
     """Performs a right rotation to the given node from the tree
@@ -475,8 +481,8 @@ class AVLTree(object):
         A.updateHeight()
         B.updateSize()
         A.updateSize()
-        print("\n right rotate")
-        self.display(self.root)
+        # print("\n right rotate")
+        # self.display(self.root)
         return A
 
     """Performs left then right rotation to the given node from the tree
@@ -823,8 +829,6 @@ class AVLTree(object):
         else:
             return self.select(node, i - r)
 
-
-
     """returns the root of the tree representing the dictionary
 
     @rtype: AVLNode
@@ -835,12 +839,35 @@ class AVLTree(object):
         return self.root
 
 
-nums_to_insert = [3,2,5,1,4]
+def list_builder(i, lst_type):
+    n = pow(2, i) * 1500
+    return_lst = []
+    while n > 0:
+        return_lst.append(n)
+        n -= 1
+    if lst_type == "reverse":
+        return return_lst
+    elif lst_type == "shuffle":
+        random.shuffle(return_lst)
+        return return_lst
+    elif lst_type == "almost":
+        return_lst.reverse()
+        split_lst = [return_lst[i: i + 300] for i in range(0, len(return_lst), 300)]
+        return_lst = []
+        for lst in split_lst:
+            lst.reverse()
+            return_lst = return_lst + lst
+        return return_lst
+    else:
+        return None
+
+
+nums_to_insert = [3, 2, 5, 1, 4]
 
 firstTree = AVLTree()
-nums = list(range(15))
-#random.shuffle(nums)
-nums.reverse()
+nums = list(range(50))
+random.shuffle(nums)
+# nums.reverse()
 sum_search = 0
 sum_transpositions = 0
 sum_balance = 0
@@ -848,16 +875,15 @@ for num in nums:
     counter = 0
     print("inserting", num)
     tup = firstTree.max_insert(num, 1)
-    firstTree.display(firstTree.root)
-    print("number of balancing", tup[0], "number of searches ", tup[1], "\n")
-    print("\n","rank of",num, "is", tup[2], "\n")
-    sum_transpositions += tup[2]
-    sum_search+=tup[1]
-    sum_balance += tup[0]
 
+    print("number of balancing", tup[0], "number of searches ", tup[1], "\n")
+    print("\n", "rank of", num, "is", tup[2], "\n")
+    sum_transpositions += tup[2]
+    sum_search += tup[1]
+    sum_balance += tup[0]
 firstTree.display(firstTree.root)
-print("\n","size of root is", firstTree.root.size)
-print("\n", "cost of sorting is", sum_search)
+print("\n", "size of root is", firstTree.root.size)
+print("\n", "cost of sorting is", sum_search + sum_balance)
 print("\n", "number of transpositions in original array is", sum_transpositions)
 print("\n", "number of rebalancing in total is", sum_balance)
 # firstTree.update_max()
@@ -876,16 +902,16 @@ print("\n", "number of rebalancing in total is", sum_balance)
 #         #print("maximum is", firstTree.max.get_key())
 #         firstTree.display(firstTree.root)
 
-# while firstTree.root:
-#     random_key = random.choice(nums)
-#     node_to_delete = firstTree.search(random_key)
-#     print("deleting", random_key)
-#     firstTree.delete(node_to_delete)
-#     if firstTree.root:
-#         firstTree.display(firstTree.root)
-#     else:
-#         print(None)
-#     nums.remove(random_key)
+while firstTree.root:
+    random_key = random.choice(nums)
+    node_to_delete = firstTree.search(random_key)
+    print("deleting", random_key)
+    firstTree.delete(node_to_delete)
+    if firstTree.root:
+        firstTree.display(firstTree.root)
+    else:
+        print(None)
+    nums.remove(random_key)
 
 # firstTree.delete(firstTree.root.get_right())
 # firstTree.display(firstTree.root)
