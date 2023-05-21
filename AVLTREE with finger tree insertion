@@ -330,7 +330,7 @@ class AVLTree(object):
             self.root.updateHeight()
             self.root.set_size(1)
             self.max = self.root
-            return 0, 0
+            return 0, 0, 1
         rb_num = 0
         y = self.max_insert_rec(self.max, key, val)  # get inserted node
         y.set_left(AVLNode(None, -1))
@@ -338,10 +338,10 @@ class AVLTree(object):
         y.updateHeight()
         y.updateSize()
         temp = self.max
+        inserted = y
         if y.get_key() > self.max.get_key():
             self.max = y
         y = y.get_parent()
-
         while y:  # check if we the node is not null (happens after we get the parent of the root)
             y.updateSize()
             temp_height = y.get_height()
@@ -358,7 +358,8 @@ class AVLTree(object):
                 y, rb_num = self.rotate(y, balance_factor)
                 y = y.get_parent()
         counter = self.search_from_max(temp, key)
-        return rb_num, counter
+        rank = self.rank(inserted)
+        return rb_num, counter, rank
 
     def search_from_max(self, node, key):
         global counter
@@ -657,11 +658,9 @@ class AVLTree(object):
 
         if not node.get_left().is_real_node():
             temp = node.get_right()
-            node = AVLNode(None, -1)
             return temp
         elif not node.get_right().is_real_node():
             temp = node.get_left()
-            node = AVLNode(None, -1)
             return temp
 
         successor = node.in_order_successor()
@@ -798,12 +797,12 @@ class AVLTree(object):
     """
 
     def rank(self, node):
-        r = node.left.size + 1
+        r = node.left.size
         y = node
-        while y.is_real_node():
-            if y.get_key() == y.get_parent().get_right().get_key():
+        while y is not self.root:
+            if y is y.get_parent().get_right():
                 r += y.parent.left.size + 1
-            y = y.parent
+            y = y.get_parent()
         return r
 
     """finds the i'th smallest item (according to keys) in self
@@ -816,13 +815,15 @@ class AVLTree(object):
     """
 
     def select(self, node, i):
-        r = self.root.get_size + 1
+        r = self.root.get_size()
         if r == i:
             return self.root
         elif i < r:
             return self.select(node, i)
         else:
             return self.select(node, i - r)
+
+
 
     """returns the root of the tree representing the dictionary
 
@@ -837,19 +838,28 @@ class AVLTree(object):
 nums_to_insert = [3,2,5,1,4]
 
 firstTree = AVLTree()
-nums = list(range(10))
-random.shuffle(nums)
-sum = 0
-for num in nums_to_insert:
+nums = list(range(15))
+#random.shuffle(nums)
+nums.reverse()
+sum_search = 0
+sum_transpositions = 0
+sum_balance = 0
+for num in nums:
     counter = 0
     print("inserting", num)
     tup = firstTree.max_insert(num, 1)
-    print("number of balancing", tup[0], "number of searches ", tup[1])
-    sum+=tup[1]
     firstTree.display(firstTree.root)
+    print("number of balancing", tup[0], "number of searches ", tup[1], "\n")
+    print("\n","rank of",num, "is", tup[2], "\n")
+    sum_transpositions += tup[2]
+    sum_search+=tup[1]
+    sum_balance += tup[0]
+
 firstTree.display(firstTree.root)
-print(firstTree.root.size)
-print("\n", "cost of sorting is", sum)
+print("\n","size of root is", firstTree.root.size)
+print("\n", "cost of sorting is", sum_search)
+print("\n", "number of transpositions in original array is", sum_transpositions)
+print("\n", "number of rebalancing in total is", sum_balance)
 # firstTree.update_max()
 #
 # firstTree.max_insert(8, 1)
