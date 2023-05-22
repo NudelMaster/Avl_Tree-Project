@@ -802,7 +802,11 @@ def list_builder(i, lst_type):
         return None
 
 
-nums_to_insert = [3, 2, 5, 1, 4]
+    
+          # tests (to delete before submitting) #
+        
+    
+# insertion test 
 
 firstTree = AVLTree()
 nums = list(range(20))
@@ -813,21 +817,7 @@ for num in nums:
     tree = firstTree.insert(num, 1)
     firstTree.display(firstTree.root)
 
-# firstTree.update_max()
-#
-# firstTree.max_insert(8, 1)
-
-
-# # 12 problematic deletion
-# deleted_nums = [6,3,10,4,16,13,0,11,9,7,18,5,19,2,14,12,1,8,15,17]
-# for num in deleted_nums:
-#     node_to_delete = firstTree.search(num)
-#     print("deleting", num)
-#     firstTree.delete(node_to_delete)
-#     if firstTree.root:
-#         #print("minimum is", firstTree.min.get_key())
-#         #print("maximum is", firstTree.max.get_key())
-#         firstTree.display(firstTree.root)
+# deletion test
 
 while firstTree.root:
     random_key = random.choice(nums)
@@ -840,5 +830,3 @@ while firstTree.root:
         print(None)
     nums.remove(random_key)
 
-# firstTree.delete(firstTree.root.get_right())
-# firstTree.display(firstTree.root)
