@@ -405,8 +405,6 @@ class AVLTree(object):
         A.updateHeight()
         B.updateSize()
         A.updateSize()
-        # print("\n left rotate")
-        # self.display(self.root)
         return A
 
     """Performs a right rotation to the given node from the tree
@@ -429,8 +427,6 @@ class AVLTree(object):
         A.updateHeight()
         B.updateSize()
         A.updateSize()
-        # print("\n right rotate")
-        # self.display(self.root)
         return A
 
     """Performs left then right rotation to the given node from the tree
@@ -575,12 +571,8 @@ class AVLTree(object):
                 y = y.get_parent()
                 rb_num += 1
             elif abs(balance_factor) >= 2:
-                print("\n Before rotate")
-                self.display(self.root)
                 y, rb_num = self.rotate(y, balance_factor)
                 y = y.get_parent()
-                print("\n After rotate")
-                self.display(self.root)
         return rb_num
 
     """Performs a regular deletion in a binary search tree
