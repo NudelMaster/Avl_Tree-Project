@@ -310,7 +310,7 @@ class AVLTree(object):
 
     def insert(self, key, val):
         root = self.get_root()
-        if root is None:
+        if root is None or not root.is_real_node():
             self.root = AVLNode(key, val)
             self.root.set_left(AVLNode(None, -1))
             self.root.set_right(AVLNode(None, -1))
@@ -664,16 +664,16 @@ class AVLTree(object):
     def split(self, node):
         left = AVLTree(node.left)
         right = AVLTree(node.right)
-        father = node.parent()
-        while father.is_real_node:
-            if father.right is node:
-                AVLTree(father.left).join(left, father.key, father.value)
+        father = node.parent
+        while father:
+            if node == father.right:
+                left.join(AVLTree(father.left), father.key, father.value)
             else:
-                AVLTree(father.right).join(right, father.key, father.value)
-            node = father
+                right.join(AVLTree(father.right), father.key, father.value)
+            node = node.parent
             father = node.parent
         return left, right
-
+    
     """joins self with key and another AVLTree
 
     @type tree: AVLTree 
@@ -689,14 +689,26 @@ class AVLTree(object):
     """
 
     def join(self, tree, key, val):
-        def join(self, tree, key, val):
+    retval = abs(self.root.height - tree.root.height) + 1
+    smallsize = 0
+    if not self.root.is_real_node():
+        tree.insert(key, val)
+        self.root = tree.root
+    elif not tree.root.is_real_node():
+        self.insert(key, val)
+    elif self.root.key < key:
+        smallsize = self.root.size
+        self.rec_join(tree, key, val)
+    else:
+        smallsize = tree.root.size
+        tree.rec_join(self, key, val)
+        self.root = tree.root
+    node = self.search(key)
+    while node and node.parent:
+        node = node.parent
+        node.size += smallsize + 1
+    return retval
 
-            retval = abs(self.root.hight - tree.root.hight) + 1
-            if self.get_root().get_key < key:
-                self.rec_join(tree, key, val)
-            else:
-                tree.rec_join(self, key, val)
-            return retval
 
     def UnbalancedJoin(self, tree, key, val):
         node = AVLNode(key, val)
@@ -706,29 +718,35 @@ class AVLTree(object):
         tree.root.set_parent(node)
         return node
 
+
     def rec_join(self, big, key, val):
-        if abs(self.root.get_hight() - big.get_root().get_hight()) <= 1:
+        if not (self.root and big.root):
+            return big.root if big.root else self.root
+        elif abs(self.root.height - big.root.height) <= 1:
             new_root = self.UnbalancedJoin(big, key, val)
-            new_root.set_height(max(self.root.get_hight(), big.get_root().get_hight()) + 1)
+            new_root.height = max(self.root.height, big.root.height) + 1
+            new_root.size = self.root.size + big.root.size + 1
             self.root = new_root
-        elif self.root.hight > big.root.hight:
-            new_root = AVLTree(self.root.get_right()).rec_join(big, key, val)
+        elif self.root.height > big.root.height:
+            new_root = AVLTree(self.root.right).rec_join(big, key, val)
             self.root.set_right(new_root)
             new_root.set_parent(self.root)
             self.root = self.Balance(new_root)
         else:
-            new_root = AVLTree(self.root.get_left()).rec_join(big, key, val)
-            self.root.set_left(new_root)
-            new_root.set_parent(self.root)
-            self.root = self.Balance(new_root)
+            new_root = self.rec_join(AVLTree(big.root.left), key, val)
+            big.root.set_left(new_root)
+            new_root.set_parent(big.root)
+            big.root = big.Balance(new_root)
+            self.root = big.root
         return self.root
+
 
     def Balance(self, node):
         true_root = node
-        while node.is_real_node():
+        while node and node.is_real_node():
             bfs = self.BFS(node)
             (true_root, rotate_num) = self.rotate(node, bfs)
-            if rotate_num != 0:
+            if rotate_num != 0 or node == self.root:
                 break
             node = true_root.get_parent()
         return true_root
