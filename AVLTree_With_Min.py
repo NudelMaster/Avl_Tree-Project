@@ -777,14 +777,22 @@ class AVLTree(object):
     @returns: the item of rank i in self
     """
 
-    def select(self, node, i):
-        r = self.root.get_size()
-        if r == i:
-            return self.root
-        elif i < r:
-            return self.select(node, i)
-        else:
-            return self.select(node, i - r)
+    def select(self, i):
+    m = self.min
+    while m.get_parent():
+        if m.get_size() >= i:
+            break
+        m = m.get_parent()
+        def select_min(node, i):
+            r = node.get_left().get_size() + 1
+            if r == i:
+                return node
+            elif i < r:
+                return select_min(node.get_left(), i)
+            else:
+                return select_min(node.get_right(), i - r)
+
+    return select_min(m, i)
 
     """returns the root of the tree representing the dictionary
 
