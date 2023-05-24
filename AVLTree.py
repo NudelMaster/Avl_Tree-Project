@@ -647,7 +647,7 @@ class AVLTree(object):
     """
 
     def size(self):
-        return self.root().get_size()
+        return self.root().get_size() if self.root else 0
 
     """splits the dictionary at a given node
 
