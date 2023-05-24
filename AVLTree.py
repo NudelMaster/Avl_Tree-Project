@@ -677,7 +677,11 @@ class AVLTree(object):
                 right.join(temp_root, father.key, father.value)
             node = node.parent
             father = node.parent
-        return left, right
+            
+        # reinitializing the minimum references
+        left.min = left.root.min_node() 
+        right.min = right.root.min_node()
+        return [left, right]
     
     """joins self with key and another AVLTree
 
@@ -710,7 +714,7 @@ class AVLTree(object):
         else:
             tree.rec_join(self, key, val)
             self.root = tree.root
-        self.root.get_height()
+        self.root.min = self.root.min_node()
         return retval
     # O(log(n))
     def UnbalancedJoin(self, tree, key, val):
