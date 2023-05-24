@@ -1,8 +1,8 @@
-# username - complete info
-# id1      - complete info
-# name1    - complete info
-# id2      - complete info
-# name2    - complete info
+# username - yefimn
+# id1      - 209342096
+# name1    - yefim nudelman
+# id2      - 212775472
+# name2    - alon berger
 
 
 """A class represnting a node in an AVL tree"""
