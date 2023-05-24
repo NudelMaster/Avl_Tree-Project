@@ -183,17 +183,11 @@ class AVLNode(object):
     @rtype: AVLNode
     @returns: A node in the subtree with the minimum key
     """
-
+    # O(log(n))
     def min_node(self):
         temp = self
         while temp.get_left().is_real_node():
             temp = temp.get_left()
-        return temp
-
-    def max_node(self):
-        temp = self
-        while temp.get_right().is_real_node():
-            temp = temp.get_right()
         return temp
 
     """returns the successor in an in-order method
@@ -201,7 +195,7 @@ class AVLNode(object):
     @rtype: AVLNode
     @returns: in order successor node
     """
-
+    # O(log(n))
     def in_order_successor(self):
         if self.right.is_real_node():
             return self.right.min_node()
@@ -212,7 +206,6 @@ class AVLNode(object):
 
     @pre: self is AVLNode
     """
-
     def updateHeight(self):
         left_height = max(self.get_left().get_height(), 0)
         right_height = max(self.get_right().get_height(), 0)
@@ -244,9 +237,7 @@ class AVLTree(object):
     def __init__(self, root=None):
         virtualNode = AVLNode(None, -1)
         self.root = root if root else virtualNode
-        self.virtualNode = virtualNode
         self.min = None
-        self.max = None
 
     # add your fields here
 
@@ -257,10 +248,9 @@ class AVLTree(object):
     @rtype: any
     @returns: the value corresponding to key.
     """
-
+    # O(log(n))
     def search(self, key):
         root = self.root
-
         def search_rec(node, key):
             if node is None or node.get_key() == key:
                 return node
@@ -268,7 +258,6 @@ class AVLTree(object):
                 return search_rec(node.get_right(), key)
             if node.get_left().is_real_node():
                 return search_rec(node.get_left(), key)
-
         return search_rec(root, key)
 
     """inserts recursively val to position i in the dictionary
@@ -282,7 +271,7 @@ class AVLTree(object):
     @param val: the value of the item
     @rtype: AVLNode
     """
-
+    # O(log(n))
     def insert_rec(self, node, key, val):  # regular insert to binary tree
         if key < node.get_key():
             if not node.get_left().is_real_node():
@@ -307,7 +296,7 @@ class AVLTree(object):
     @rtype: int
     @returns: the number of rebalancing operation due to AVL rebalancing
     """
-
+    # O(log(n))
     def insert(self, key, val):
         root = self.get_root()
         if root is None or not root.is_real_node():
@@ -318,7 +307,7 @@ class AVLTree(object):
             self.root.get_right().set_parent(self.root)
             self.root.updateHeight()
             self.root.set_size(1)
-            self.max = self.root
+            self.min = self.root
             return 0, 0, 0
         rb_num = 0
         y = self.insert_rec(root, key, val)  # get inserted node
@@ -326,6 +315,8 @@ class AVLTree(object):
         y.set_right(AVLNode(None, -1))
         y.updateHeight()
         y.updateSize()
+        if self.min.get_key() > y.get_key():
+            self.min = y
         y = y.get_parent()
         while y:  # check if we the node is not null (happens after we get the parent of the root)
             y.updateSize()
@@ -539,8 +530,9 @@ class AVLTree(object):
     @rtype: int
     @returns: the number of rebalancing operation due to AVL rebalancing
     """
-
+    # O(log(n))
     def delete(self, node):
+        # getting deleted node's parent
         left = node.get_left()
         right = node.get_right()
         if node.is_leaf():
@@ -555,7 +547,7 @@ class AVLTree(object):
             else:
                 y = successor_parent
         self.root = self.BTS_delete(self.root, node.get_key())  # Regular deletion from BST
-        if not self.root.is_real_node():  # if we get an empty tree, after deleting the root of size 1
+        if not self.root.is_real_node():  # if we get an empty tree, after deleting the root of size 1 we have an empty tree and exit the function
             self.root = None
             return 0
         rb_num = 0
@@ -585,7 +577,7 @@ class AVLTree(object):
     @rtype: AVLNode
     @returns: the root of the tree after the deletion of the node with the given key
     """
-
+    # O(log(n))
     def BTS_delete(self, node, key):  # recursive method to delete node with given key
         if not node.is_real_node():
             return None
@@ -600,25 +592,33 @@ class AVLTree(object):
 
         # After reaching the node starting the deletion
         if node.is_leaf():
+            if node is self.min and node is not self.root:
+                self.min = node.get_parent()
             return AVLNode(None, -1)
 
-        if not node.get_left().is_real_node():
+        if not node.get_left().is_real_node():  # no left child (can be minimum)
             temp = node.get_right()
+            if node is self.min:
+                if temp.is_real_node():
+                    self.min = temp
+                elif node is not self.root:
+                    self.min = node.get_parent()
             return temp
-        elif not node.get_right().is_real_node():
+        elif not node.get_right().is_real_node():  # no right child (can't be minimum)
             temp = node.get_left()
             return temp
 
-        successor = node.in_order_successor()
-        successor_parent = successor.get_parent()
+        successor = node.in_order_successor() 
+        successor_parent = successor.get_parent() 
 
-        if successor_parent is not node:
+        if successor_parent is not node: # if sucessor's parent is node itself, then the successor is right son of node
             successor_parent.set_left(successor.get_right())
             successor_parent.get_left().set_parent(successor_parent)
         else:
             successor_parent.set_right(successor.get_right())
             successor_parent.get_right().set_parent(successor_parent)
-
+        
+        # replace data
         node.set_key(successor.get_key())
         node.set_value(successor.set_value(successor.get_value()))
 
@@ -629,7 +629,7 @@ class AVLTree(object):
     @rtype: list
     @returns: a sorted list according to key of touples (key, value) representing the data structure
     """
-
+    # Theta(n)
     def avl_to_array(self):
         def avl_to_array_rec(array, node):
             if (not node.key is None) and node.is_real_node:
@@ -659,7 +659,7 @@ class AVLTree(object):
     dictionary smaller than node.key, right is an AVLTree representing the keys in the 
     dictionary larger than node.key.
     """
-
+    # O(log(n))
     def split(self, node):
         left = AVLTree(node.left)
         right = AVLTree(node.right)
@@ -692,7 +692,7 @@ class AVLTree(object):
     @rtype: int
     @returns: the absolute value of the difference between the height of the AVL trees joined
     """
-
+    # O(log(n))
     def join(self, tree, key, val):
         first_height = self.root.height if self.root else -1
         sec_height = tree.root.height if tree.root else -1
@@ -712,7 +712,7 @@ class AVLTree(object):
             self.root = tree.root
         self.root.get_height()
         return retval
-
+    # O(log(n))
     def UnbalancedJoin(self, tree, key, val):
         node = AVLNode(key, val)
         node.size = self.root.size + tree.root.size + 1
@@ -722,7 +722,7 @@ class AVLTree(object):
         self.root.set_parent(node)
         tree.root.set_parent(node)
         return node
-
+    # O(log(n))
     def rec_join(self, big, key, val):
         if not (self.root and big.root):
             return big.root if big.root else self.root
@@ -743,7 +743,7 @@ class AVLTree(object):
         self.root.updateSize()
         self.root.updateHeight()
         return self.root
-
+    # O(log(n))
     def Balance(self, node):
         true_root = node
         while node and node.is_real_node():
@@ -761,7 +761,7 @@ class AVLTree(object):
     @rtype: int
     @returns: the rank of node in self
     """
-
+    # O(log(n))
     def rank(self, node):
         r = node.left.size + 1
         y = node
@@ -779,24 +779,33 @@ class AVLTree(object):
     @rtype: int
     @returns: the item of rank i in self
     """
+    # O(log(n))
+    def select(self, i):
+    m = self.min
+    while m.get_parent():
+        if m.get_size() >= i:
+            break
+        m = m.get_parent()
+        
+        def select_min(node, i):
+            r = node.get_left().get_size() + 1
+            if r == i:
+                return node
+            elif i < r:
+                return select_min(node.get_left(), i)
+            else:
+                return select_min(node.get_right(), i - r)
 
-    def select(self, node, i):
-        r = self.root.get_size()
-        if r == i:
-            return self.root
-        elif i < r:
-            return self.select(node, i)
-        else:
-            return self.select(node, i - r)
+    return select_min(m, i)
 
     """returns the root of the tree representing the dictionary
 
     @rtype: AVLNode
     @returns: the root, None if the dictionary is empty
     """
-
+    
     def get_root(self):
-        return self.root
+        return self.root if self.root.is_real_node() else None
 
 
 def list_builder(i, lst_type):
