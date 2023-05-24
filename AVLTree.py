@@ -243,7 +243,7 @@ class AVLTree(object):
 
     def __init__(self, root=None):
         virtualNode = AVLNode(None, -1)
-        self.root = root
+        self.root = root if root else virtualNode
         self.virtualNode = virtualNode
         self.min = None
         self.max = None
@@ -632,11 +632,10 @@ class AVLTree(object):
 
     def avl_to_array(self):
         def avl_to_array_rec(array, node):
-            if node.is_real_node:
+            if node.key and node.is_real_node:
                 avl_to_array_rec(array, node.left)
-                array.append(node)
+                array.append(node.key)
                 avl_to_array_rec(array, node.right)
-
         ret_list = []
         avl_to_array_rec(ret_list, self.root)
         return ret_list
@@ -664,12 +663,18 @@ class AVLTree(object):
     def split(self, node):
         left = AVLTree(node.left)
         right = AVLTree(node.right)
+        left.root.parent = None
+        right.root.parent = None
         father = node.parent
         while father:
-            if node == father.right:
-                left.join(AVLTree(father.left), father.key, father.value)
+            if node.key == father.right.key:
+                temp_root = AVLTree(father.left)
+                temp_root.root.set_parent(None)
+                left.join(temp_root, father.key, father.value)
             else:
-                right.join(AVLTree(father.right), father.key, father.value)
+                temp_root = AVLTree(father.right)
+                temp_root.root.set_parent(None)
+                right.join(temp_root, father.key, father.value)
             node = node.parent
             father = node.parent
         return left, right
@@ -689,43 +694,40 @@ class AVLTree(object):
     """
 
     def join(self, tree, key, val):
-    retval = abs(self.root.height - tree.root.height) + 1
-    smallsize = 0
-    if not self.root.is_real_node():
-        tree.insert(key, val)
-        self.root = tree.root
-    elif not tree.root.is_real_node():
-        self.insert(key, val)
-    elif self.root.key < key:
-        smallsize = self.root.size
-        self.rec_join(tree, key, val)
-    else:
-        smallsize = tree.root.size
-        tree.rec_join(self, key, val)
-        self.root = tree.root
-    node = self.search(key)
-    while node and node.parent:
-        node = node.parent
-        node.size += smallsize + 1
-    return retval
-
+        first_height = self.root.height if self.root else -1
+        sec_height = tree.root.height if tree.root else -1
+        retval = abs(first_height - sec_height) + 1
+        if (self.root.key is None) and (tree.root.key is None):
+            self.root = AVLNode(key, val)
+            self.root.size = 1
+        elif tree.root.key is None:
+            self.insert(key, val)
+        elif self.root.key is None:
+            tree.insert(key, val)
+            self.root = tree.root
+        elif self.root.key < key:
+            self.rec_join(tree, key, val)
+        else:
+            tree.rec_join(self, key, val)
+            self.root = tree.root
+        self.root.get_height()
+        return retval
 
     def UnbalancedJoin(self, tree, key, val):
         node = AVLNode(key, val)
+        node.size = self.root.size + tree.root.size + 1
+        node.height = max(self.root.height, tree.root.height) + 1
         node.left = self.root
         node.right = tree.root
         self.root.set_parent(node)
         tree.root.set_parent(node)
         return node
 
-
     def rec_join(self, big, key, val):
         if not (self.root and big.root):
             return big.root if big.root else self.root
         elif abs(self.root.height - big.root.height) <= 1:
             new_root = self.UnbalancedJoin(big, key, val)
-            new_root.height = max(self.root.height, big.root.height) + 1
-            new_root.size = self.root.size + big.root.size + 1
             self.root = new_root
         elif self.root.height > big.root.height:
             new_root = AVLTree(self.root.right).rec_join(big, key, val)
@@ -738,8 +740,9 @@ class AVLTree(object):
             new_root.set_parent(big.root)
             big.root = big.Balance(new_root)
             self.root = big.root
+        self.root.updateSize()
+        self.root.updateHeight()
         return self.root
-
 
     def Balance(self, node):
         true_root = node
@@ -750,7 +753,6 @@ class AVLTree(object):
                 break
             node = true_root.get_parent()
         return true_root
-
     """compute the rank of node in the self
 
     @type node: AVLNode
