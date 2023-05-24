@@ -632,7 +632,7 @@ class AVLTree(object):
 
     def avl_to_array(self):
         def avl_to_array_rec(array, node):
-            if node.key and node.is_real_node:
+            if (not node.key is None) and node.is_real_node:
                 avl_to_array_rec(array, node.left)
                 array.append(node.key)
                 avl_to_array_rec(array, node.right)
