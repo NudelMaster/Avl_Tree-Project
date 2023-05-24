@@ -785,12 +785,12 @@ class AVLTree(object):
     """
     # O(log(n))
     def select(self, i):
-    m = self.min
-    while m.get_parent():
-        if m.get_size() >= i:
-            break
-        m = m.get_parent()
-        
+        m = self.min
+        while m.get_parent():
+            if m.get_size() >= i:
+                break
+            m = m.get_parent()
+
         def select_min(node, i):
             r = node.get_left().get_size() + 1
             if r == i:
@@ -800,7 +800,7 @@ class AVLTree(object):
             else:
                 return select_min(node.get_right(), i - r)
 
-    return select_min(m, i)
+        return select_min(m, i)
 
     """returns the root of the tree representing the dictionary
 
