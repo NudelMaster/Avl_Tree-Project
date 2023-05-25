@@ -759,7 +759,6 @@ class AVLTree(object):
                 return select_min(node.get_left(), i)
             else:
                 return select_min(node.get_right(), i - r)
-
         return select_min(m, i)
 
     """returns the root of the tree representing the dictionary
@@ -769,6 +768,8 @@ class AVLTree(object):
     """
     
     def get_root(self):
+        if self.root is None or not self.root.is_real_node():
+            return None
         return self.root
 
 
