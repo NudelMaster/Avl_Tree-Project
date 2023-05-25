@@ -186,9 +186,10 @@ class AVLNode(object):
     # O(log(n))
     def min_node(self):
         temp = self
-        while temp.get_left().is_real_node():
-            temp = temp.get_left()
-        return temp
+        if temp.is_real_node():
+            while temp.get_left().is_real_node():
+                temp = temp.get_left()
+            return temp
 
     """returns the successor in an in-order method
 
@@ -315,7 +316,9 @@ class AVLTree(object):
         y.set_right(AVLNode(None, -1))
         y.updateHeight()
         y.updateSize()
-        if self.min.get_key() > y.get_key():
+        if self.min is None: # if we insert after splitting we need to make sure to update the minimum
+            self.min = self.root.min_node()
+        elif self.min.get_key() > y.get_key():
             self.min = y
         y = y.get_parent()
         while y:  # check if we the node is not null (happens after we get the parent of the root)
@@ -329,8 +332,6 @@ class AVLTree(object):
                 y = y.get_parent()
                 rb_num += 1
             elif abs(balance_factor) == 2:
-                # print("\n Before rotate")
-                # self.display(self.root)
                 y, rb_num = self.rotate(y, balance_factor)
                 y = y.get_parent()
         return rb_num
@@ -592,7 +593,7 @@ class AVLTree(object):
     """
 
     def size(self):
-        return self.root().get_size() if self.root else 0
+        return self.root.get_size() if self.root.is_real_node() else 0
 
     """splits the dictionary at a given node
 
@@ -646,8 +647,11 @@ class AVLTree(object):
         first_height = self.root.height if self.root else -1
         sec_height = tree.root.height if tree.root else -1
         retval = abs(first_height - sec_height) + 1
-        if (self.root.key is None) and (tree.root.key is None):
-            self.root = AVLNode(key, val)
+        if (self.root.key is None) and (tree.root.key is None): # if we split a node in which left and right are virtual
+            self.root = AVLNode(key, val) 
+            self.root.set_left(AVLNode(None, -1))
+            self.root.set_right(AVLNode(None, -1))
+            self.root.height = 0
             self.root.size = 1
         elif tree.root.key is None:
             self.insert(key, val)
@@ -661,6 +665,10 @@ class AVLTree(object):
             self.root = tree.root
         self.root.min = self.root.min_node()
         return retval
+   
+
+
+    """ helper function for join"""
     # O(log(n))
     def UnbalancedJoin(self, tree, key, val):
         node = AVLNode(key, val)
@@ -671,6 +679,9 @@ class AVLTree(object):
         self.root.set_parent(node)
         tree.root.set_parent(node)
         return node
+   
+
+    """ helper function for  join """
     # O(log(n))
     def rec_join(self, big, key, val):
         if not (self.root and big.root):
@@ -692,6 +703,9 @@ class AVLTree(object):
         self.root.updateSize()
         self.root.updateHeight()
         return self.root
+   
+
+    """ helper function for balance after split/join"""
     # O(log(n))
     def Balance(self, node):
         true_root = node
@@ -733,6 +747,7 @@ class AVLTree(object):
         m = self.min
         while m.get_parent():
             if m.get_size() >= i:
+                m = m.get_parent()
                 break
             m = m.get_parent()
 
