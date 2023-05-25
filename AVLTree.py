@@ -309,7 +309,7 @@ class AVLTree(object):
             self.root.updateHeight()
             self.root.set_size(1)
             self.min = self.root
-            return 0, 0, 0
+            return 0
         rb_num = 0
         y = self.insert_rec(root, key, val)  # get inserted node
         y.set_left(AVLNode(None, -1))
