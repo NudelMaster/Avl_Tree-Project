@@ -467,62 +467,7 @@ class AVLTree(object):
             A.get_parent().set_right(A)
         B.set_parent(A)
 
-        # Print the tree
-
-    def display(self, root):
-        lines, *_ = self._display_aux(root)
-        for line in lines:
-            print(line)
-
-    def _display_aux(self, node):
-        """Returns list of strings, width, height, and horizontal coordinate of the root."""
-        # No child.
-        if not node.get_right() and not node.get_left():
-            if not node.is_real_node():
-                line = '%s' % "V"
-            else:
-                line = '%s' % node.get_key()
-
-            width = len(line)
-            height = 1
-            middle = width // 2
-            return [line], width, height, middle
-
-        # Only left child.
-        if not node.get_right() and node.get_left():
-            lines, n, p, x = self._display_aux(node.get_left())
-            s = '%s' % node.get_key()
-            u = len(s)
-            first_line = (x + 1) * ' ' + (n - x - 1) * '_' + s
-            second_line = x * ' ' + '/' + (n - x - 1 + u) * ' '
-            shifted_lines = [line + u * ' ' for line in lines]
-            return [first_line, second_line] + shifted_lines, n + u, p + 2, n + u // 2
-
-        # Only right child.
-        if not node.get_left() and node.get_right():
-            lines, n, p, x = self._display_aux(node.get_right())
-            s = '%s' % node.get_key()
-            u = len(s)
-            first_line = s + x * '_' + (n - x) * ' '
-            second_line = (u + x) * ' ' + '\\' + (n - x - 1) * ' '
-            shifted_lines = [u * ' ' + line for line in lines]
-            return [first_line, second_line] + shifted_lines, n + u, p + 2, u // 2
-
-        # Two children.
-        left, n, p, x = self._display_aux(node.get_left())
-        right, m, q, y = self._display_aux(node.get_right())
-        s = '%s' % node.get_key()
-        u = len(s)
-        first_line = (x + 1) * ' ' + (n - x - 1) * '_' + s + y * '_' + (m - y) * ' '
-        second_line = x * ' ' + '/' + (n - x - 1 + u + y) * ' ' + '\\' + (m - y - 1) * ' '
-        if p < q:
-            left += [n * ' '] * (q - p)
-        elif q < p:
-            right += [m * ' '] * (p - q)
-        zipped_lines = zip(left, right)
-        lines = [first_line, second_line] + [a + u * ' ' + b for a, b in zipped_lines]
-        return lines, n + m + u, max(p, q) + 2, n + u // 2
-
+ 
     """deletes node from the dictionary
 
     @type node: AVLNode
@@ -809,57 +754,7 @@ class AVLTree(object):
     """
     
     def get_root(self):
-        return self.root if self.root.is_real_node() else None
-
-
-def list_builder(i, lst_type):
-    n = pow(2, i) * 1500
-    return_lst = []
-    while n > 0:
-        return_lst.append(n)
-        n -= 1
-    if lst_type == "reverse":
-        return return_lst
-    elif lst_type == "shuffle":
-        random.shuffle(return_lst)
-        return return_lst
-    elif lst_type == "almost":
-        return_lst.reverse()
-        split_lst = [return_lst[i: i + 300] for i in range(0, len(return_lst), 300)]
-        return_lst = []
-        for lst in split_lst:
-            lst.reverse()
-            return_lst = return_lst + lst
-        return return_lst
-    else:
-        return None
+        return self.root
 
 
     
-          # tests (to delete before submitting) #
-        
-    
-# insertion test 
-
-firstTree = AVLTree()
-nums = list(range(20))
-random.shuffle(nums)
-for num in nums:
-    counter = 0
-    print("inserting", num)
-    tree = firstTree.insert(num, 1)
-    firstTree.display(firstTree.root)
-
-# deletion test
-
-while firstTree.root:
-    random_key = random.choice(nums)
-    node_to_delete = firstTree.search(random_key)
-    print("deleting", random_key)
-    firstTree.delete(node_to_delete)
-    if firstTree.root:
-        firstTree.display(firstTree.root)
-    else:
-        print(None)
-    nums.remove(random_key)
-
